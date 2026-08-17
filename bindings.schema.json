@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pazaan/agentic-development/blob/main/bindings.schema.json",
+  "title": "agentic-development project bindings",
+  "description": "Schema for <project-root>/agentic-development.config.yml. Resolves project-shaped values (ticket source, CI command, DB stack, principles doc, etc.) for canonical agents.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "TICKET_SOURCE": {
+      "description": "Ticket store binding.",
+      "enum": ["linear", "gh-projects", "gh-issues", "manual"],
+      "default": "manual"
+    },
+    "TICKET_SOURCE_PROJECT": {
+      "description": "Project / board identifier within the ticket store.",
+      "type": "string"
+    },
+    "PROJECT_CI_CMD": {
+      "description": "Command Coder / Upgrader runs as CI.",
+      "type": "string"
+    },
+    "PROJECT_DB_START_CMD": {
+      "description": "Command to start the local DB stack.",
+      "type": "string"
+    },
+    "PROJECT_DB_MIGRATIONS_DIR": {
+      "description": "Directory holding DB migration files.",
+      "type": "string"
+    },
+    "PROJECT_DB_STACK": {
+      "description": "DB stack identifier.",
+      "type": "string",
+      "default": "none"
+    },
+    "PROJECT_ADR_DIR": {
+      "description": "Directory holding ADRs.",
+      "type": "string"
+    },
+    "PROJECT_PRINCIPLES_FILE": {
+      "description": "Engineering principles document path.",
+      "type": "string"
+    },
+    "PROJECT_RULES_FILE": {
+      "description": "Hard rules / contributing document path.",
+      "type": "string"
+    },
+    "PROJECT_TECH_DESIGN_FILE": {
+      "description": "Technical design document path.",
+      "type": "string"
+    },
+    "PROJECT_FRAMEWORK_MCPS": {
+      "description": "Comma-separated list of MCP server globs Coder should reference.",
+      "type": "string"
+    },
+    "PROJECT_PRECOMMIT_CHECKLIST": {
+      "description": "Path to a YAML checklist consumed by hooks/task-completed-checklist.sh.",
+      "type": "string"
+    },
+    "PROJECT_PUSH_ALLOWED": {
+      "description": "Whether Lead may push and open PRs in this project. This is the authorization gate and says nothing about which command to run. Absent or false means Lead refuses to push.",
+      "type": "boolean",
+      "default": false
+    },
+    "PROJECT_PR_PUSH_CMD": {
+      "description": "DEPRECATED as an authorization signal; OPTIONAL as a command override. Set it only when the repo needs a non-canonical wrapper. Leave unset otherwise: Lead derives the command from Step 0 detection in agentic-development:stacked-prs, which reads the repo's actual state instead of a cached guess. A literal stack-tool command here goes stale silently when the repo changes tools. Authorization comes from PROJECT_PUSH_ALLOWED.",
+      "type": "string"
+    },
+    "PROJECT_AGENT_STATE_BRANCH": {
+      "description": "Branch name where agent coordination state (iteration tracker, plans, scratch) lives. Independent ref with no shared history with main.",
+      "type": "string"
+    }
+  }
+}

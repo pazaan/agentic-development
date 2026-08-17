@@ -1,0 +1,56 @@
+{
+  "name": "agentic-development",
+  "version": "1.0.0",
+  "description": "Personal Claude Code extensions \u2014 skills, commands, agents, and hooks.",
+  "author": {
+    "name": "Lennart Goedhart",
+    "email": "lennart@omnibase.com.au"
+  },
+  "dependencies": [
+    "superpowers@claude-plugins-official",
+    "iterative-development@prime-radiant-marketplace"
+  ],
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/userpromptsubmit-skill-nudge.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pretooluse-skill-gate.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/task-completed-checklist.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking pre-commit checklist..."
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/task-completed-caveman-bleed.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking for caveman-mode bleed..."
+          }
+        ]
+      }
+    ]
+  }
+}
