@@ -29,6 +29,7 @@ must tolerate every binding being unset.
 | `PROJECT_TECH_DESIGN_FILE`      | Technical-design doc                                            | (Lead skips tech-design re-read)                 |
 | `PROJECT_FRAMEWORK_MCPS`        | Comma-list of MCP server globs Coder should reference           | (none)                                           |
 | `PROJECT_PRECOMMIT_CHECKLIST`   | Path to YAML listing pre-commit items                           | (`task-completed-checklist.sh` no-op)            |
+| `PROJECT_CLASS_FORBIDDEN_PATHS` | Per-class denylist of path prefixes (see below)                 | (no class-scope enforcement; every path allowed) |
 | `PROJECT_PUSH_ALLOWED`          | Whether Lead may push / open PRs at all                         | `false` (Lead refuses to push)                   |
 | `PROJECT_PR_PUSH_CMD`           | Optional override for the push command; not an authorization    | (Lead derives the command from stack detection)  |
 | `PROJECT_AGENT_STATE_BRANCH`    | Branch name for agent coordination state                        | (Lead omits agent-state refs from PR bodies)     |
@@ -53,10 +54,37 @@ correction because its only real job was being non-empty.
 once that the config should be migrated. Do not silently refuse — that
 would break every project written against the older schema.
 
+### Class-scoped path denylist
+
+`PROJECT_CLASS_FORBIDDEN_PATHS` is what makes a plan's `class:` load-bearing
+at execution time rather than only at dispatch time.
+
+Format — one flat string, because `load_bindings` parses scalars only and a
+nested YAML map will not load:
+
+```
+PROJECT_CLASS_FORBIDDEN_PATHS: "ui:db/migrations/,functions/,shared/|docs:src/"
+```
+
+`class:prefix,prefix|class:prefix`. Prefixes match from the repo root. A
+class absent from the string is unrestricted, and an unset binding disables
+the check entirely — so existing projects keep working unchanged.
+
+It is a denylist, not an allowlist, deliberately: the set of paths a UI
+ticket may legitimately touch is open-ended and grows with the codebase,
+while the set it must not touch is small, stable, and the one that actually
+costs rework when crossed.
+
+The motivating evidence is that on a UI-conversion milestone, tickets that
+pulled in backend files produced every significant rework commit, and the
+ones that stayed inside the UI layer produced none. Crossing a layer is not
+breadth — it is a different contract, with different review and different
+failure modes, and a UI test suite that cannot catch a mistake in it.
+
 ## Where each handle is consumed
 
-- **Lead** — `TICKET_SOURCE`, `PROJECT_PUSH_ALLOWED`, `PROJECT_PR_PUSH_CMD` (override only), `PROJECT_TECH_DESIGN_FILE`, `PROJECT_AGENT_STATE_BRANCH`, plan-banner schema.
-- **Coder** — `PROJECT_CI_CMD`, `PROJECT_RULES_FILE`, `PROJECT_FRAMEWORK_MCPS` (informational).
+- **Lead** — `TICKET_SOURCE`, `PROJECT_PUSH_ALLOWED`, `PROJECT_PR_PUSH_CMD` (override only), `PROJECT_TECH_DESIGN_FILE`, `PROJECT_AGENT_STATE_BRANCH`, `PROJECT_CLASS_FORBIDDEN_PATHS` (class-scope gate), plan-banner schema.
+- **Coder** — `PROJECT_CI_CMD`, `PROJECT_RULES_FILE`, `PROJECT_FRAMEWORK_MCPS` (informational), `PROJECT_CLASS_FORBIDDEN_PATHS` (abort trigger).
 - **Reviewer** — `PROJECT_PRINCIPLES_FILE`, `PROJECT_RULES_FILE`, `PROJECT_TECH_DESIGN_FILE`.
 - **Tester** — `PROJECT_FRAMEWORK_MCPS`.
 - **Backend-Tester** — `PROJECT_DB_START_CMD`, `PROJECT_DB_STACK`.
@@ -79,6 +107,7 @@ PROJECT_RULES_FILE: <rules-doc-path>
 PROJECT_TECH_DESIGN_FILE: <tech-design-doc-path>
 PROJECT_FRAMEWORK_MCPS: "<comma-list-of-MCP-globs>"
 PROJECT_PRECOMMIT_CHECKLIST: <yaml-path>
+PROJECT_CLASS_FORBIDDEN_PATHS: "ui:<backend-path>/,<shared-path>/"   # or: unset, to disable the check
 PROJECT_PUSH_ALLOWED: true                    # or: false / unset, to forbid pushing
 # PROJECT_PR_PUSH_CMD: <wrapper-command>      # override only; normally leave unset
 PROJECT_AGENT_STATE_BRANCH: <branch-name>     # or: (unset, if no team agent workflow)

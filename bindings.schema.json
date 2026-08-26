@@ -56,6 +56,10 @@
       "description": "Path to a YAML checklist consumed by hooks/task-completed-checklist.sh.",
       "type": "string"
     },
+    "PROJECT_CLASS_FORBIDDEN_PATHS": {
+      "description": "Per-class denylist of path prefixes a ticket of that class may not modify. Flat string — the binding loader parses scalars only, so nested YAML will not load. Format: 'class:prefix,prefix|class:prefix'. Classes are the plan front-matter values (ui, backend, docs, mechanical, spike, upgrade); a class absent from the string has no restriction. Consumed by Coder (abort on first contact) and by Lead's class-scope gate (reject the diff before accepting Coder's work). Example: 'ui:supabase/migrations/,supabase/functions/,shared/|docs:src/,supabase/'.",
+      "type": "string"
+    },
     "PROJECT_PUSH_ALLOWED": {
       "description": "Whether Lead may push and open PRs in this project. This is the authorization gate and says nothing about which command to run. Absent or false means Lead refuses to push.",
       "type": "boolean",
