@@ -27,7 +27,9 @@ model: claude-opus-4-7
 
 ## Plan metadata
 
-Front-matter: `ticket`, `class` (ui|backend|docs|mechanical|spike), `mode` (default|local-stack), `push-cmd`. `mode: local-stack` ⇒ no push, no PR-create.
+Front-matter: `ticket`, `class` (ui|backend|docs|mechanical|spike|upgrade), `mode` (default|local-stack), `push-cmd`. `mode: local-stack` ⇒ no push, no PR-create.
+
+`class` is not decorative. It selects the persistent roster, drives conditional dispatch, and — via `$PROJECT_CLASS_FORBIDDEN_PATHS` — bounds which paths Coder may modify. Pick it deliberately: a ticket whose work genuinely spans layers is `class: backend`, or two tickets, not a `class: ui` ticket that quietly grows a migration.
 
 ## PR body
 
@@ -51,7 +53,7 @@ See `agentic-development:pr-body-protocol`. Lead's role: enforce shape pre-push,
 ## Conditional dispatch
 
 - auth/RLS/secrets diff → `security-reviewer`
-- `$PROJECT_DB_MIGRATIONS_DIR` diff → `db-migration-reviewer`
+- `$PROJECT_DB_MIGRATIONS_DIR` diff → `db-migration-reviewer` — **but check the class first.** If the ticket's class forbids that path, the diff is a scope breach, not a review request. Run the class-scope gate below before dispatching a specialist; dispatching one treats the symptom as normal and is how a migration lands on a UI ticket with everybody's approval.
 - CI red → `ci-triager`
 - ambiguous AC → `pm-reviewer`
 - class=spike → `explorer`; class=upgrade → `upgrader`
@@ -94,6 +96,21 @@ Before labeling any finding in- or out-of-scope:
 4. Apply the user-stated scope bar to every candidate yourself. Do not re-ask (e.g. via `AskUserQuestion`) for a ruling the user has already given.
 
 Rationale: the recurring failure is substituting classification labels for analysis and bouncing settled scope decisions back to the user — both read as the agent dodging the work. Verifying a finding means tracing the whole code path (run the regex, trace the call chain), not matching a single line.
+
+## Class-scope gate (before accepting Coder's work)
+
+Runs when a teammate reports work complete — **before** review, before dispatching any specialist, before the pre-push checklist. Skip only when `$PROJECT_CLASS_FORBIDDEN_PATHS` is unset.
+
+1. Diff the branch against its base and list changed paths (`git diff --stat <base>..HEAD`).
+2. Compare against the forbidden prefixes for this ticket's `class`.
+3. Any match ⇒ **reject the work; do not review it, do not accept it.** Send it back with the forbidden path named.
+4. Route the underlying defect to the **owning ticket, reopened** — find the owner with `git log --diff-filter=A -- <path>` or blame; the commit subject carries the ticket id. Never open a new bug ticket for a defect in work an existing ticket shipped.
+
+Do this from the diff, not from Coder's completion report. "Files touched" in a self-report is a claim; `git diff --stat` is the fact, and the two have diverged in practice.
+
+Rationale: the check is cheap, mechanical, and catches what neither Reviewer nor Tester is looking for — Reviewer reads the diff against the plan and `agents/reviewer.md` hands scope calls to Lead, so a backend file in a UI ticket reads to Reviewer as in-scope-by-assumption. It also catches `Bash`-mediated writes that a path-matching `PreToolUse` hook cannot see, which is why this gate exists even where such a hook is installed.
+
+A class breach is a planning defect as often as a Coder one. If the ticket genuinely cannot be delivered inside its class, the answer is to re-class it or split it with user approval — not to wave the diff through.
 
 ## Pre-push checklist
 

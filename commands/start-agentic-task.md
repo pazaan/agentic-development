@@ -108,8 +108,13 @@ phase/milestone framing):
   verbatim, paired with the plan section that addresses it) and
   `## Build Order` (the concrete spawn-and-gate sequence).
 - Front-matter must include: `ticket`, `class`
-  (`ui` | `backend` | `docs` | `mechanical` | `spike`), `mode`
+  (`ui` | `backend` | `docs` | `mechanical` | `spike` | `upgrade`), `mode`
   (`default` | `local-stack`), `push-cmd`.
+- `class` bounds which paths Coder may modify, via
+  `$PROJECT_CLASS_FORBIDDEN_PATHS`. Choose it against the work the ACs
+  actually require, not against the ticket's title. If delivering the ACs
+  needs a migration or an edge function, the ticket is not `class: ui` —
+  re-class it, or split it, before spawning anyone.
 
 ## 5. Present the plan
 
