@@ -69,16 +69,21 @@ State mechanisms rather than reasons; the reason is the part nobody executes. Wh
 
 ## CI
 
-Run `$PROJECT_CI_CMD` (skip if unset; run tests directly). Report verdict to Lead. CI red ⇒ Lead may dispatch `ci-triager`.
+Run `$PROJECT_CI_CMD` **once, immediately before push** — not per commit, not per amend (skip if unset; run tests directly). Report verdict to Lead. CI red ⇒ Lead may dispatch `ci-triager`.
+
+During iteration run the typecheck and the specific test files you touched, nothing wider. A review round that ends in an amend does not earn another full run; re-run the gate only when the amend changed something the targeted tests do not cover.
+
+Most projects' remote CI runs on push, so a local full gate before every commit buys nothing the remote will not already tell you.
 
 ## Output contract
 
 Per-task completion report to Lead via Teams message (`claude agent message Lead`):
 
 - ✓ / NOT INVOKED per mandatory skill / MCP.
-- CI verdict.
+- CI verdict. "Not re-run since the last verdict — targeted tests green" is a valid answer, with the targeted-test output attached. Do not satisfy this bullet by running the full gate.
 - Files touched.
 - Open follow-ups.
+- Every claim about file contents — grant sets, column names, function names, config values — quoted from the file with `sed -n` / `grep` in the same turn. Never written from memory of what the change was meant to do. `## Self-reporting CI verdicts` treats an unbacked verdict as fabrication; a description of your own staged diff is held to the same standard.
 
 ## Stand-down
 
