@@ -274,48 +274,36 @@ can be replaced without touching the inline comments:
 
 ## Red Flags — stop and re-verify
 
-- About to relay a finding that cites a flag, method, or line you haven't
-  read.
-- About to assert a failure path you reasoned about but never executed,
-  when the trigger is reproducible in a scratch script.
-- Verifying hardest on the findings you expect to reject and least on the
-  ones you are about to relay. The relayed ones are the ones that reach
-  the author.
-- Illustrating a test gap with a mutation nobody would make ("change this
-  constant and no test fails"). An absurd mutation argues the constant is
-  obvious, not that the gap matters.
+Triggers, not arguments. Each one's reasoning lives in the step it belongs
+to; if a flag fires and you want the case for it, that is where it is.
+
+- Citing a flag, method or line you have not read to the end of.
+- Asserting a failure path you never executed, when a scratch script would
+  run it.
+- Verifying hardest on the findings you expect to reject. The relayed ones
+  are the ones that reach the author.
+- Illustrating a test gap with a mutation nobody would make. An absurd
+  mutation argues the constant is obvious, not that the gap matters.
 - Writing a concession into a finding — "low impact", "clients tolerate
-  this", "consistent with the existing model" — and then continuing past
-  it. The concession has already decided the size: one line, then stop.
-- Your finding cites a file other than the anchor. Cutting the second
-  citation almost never loses the point, and keeping it is usually you
-  showing your verification rather than the author needing it.
-- Reviewer claims a docstring "lies" — read it carefully. "Lets tests
-  verify X without reaching in" describes encapsulation (the function
-  absorbs the brittle access), not avoidance.
-- Two findings reference each other (A is a problem because of B). Check
-  if A is real standalone.
-- "Could in principle" / "a future maintainer might" / "if someone runs
-  with -O" — drop unless the condition is plausible for this codebase.
-- About to paste a suggestion block you have not read against the lines it
-  replaces. The block is code and nothing type-checks it for you.
-- Your fix's recovery path calls the same thing that just failed. Say which
-  case it closes, or drop the fix.
-- Asking for a test on a path you have not traced. If the trigger cannot
-  occur, the finding was that the code is unreachable, not that it is
-  untested.
-- A nit whose fix needs a new type, a new abstraction, or a signature change
-  across several files. The size of the remedy is evidence about the finding.
-- You just shortened a comment. Everything in it is a fresh claim again.
-- Your anchor is a bare filename.
-- Your anchor is a line no hunk covers. The post 422s, or the comment
-  silently lands somewhere else.
-- Two of your comments touch one file and you have not read them as a
-  single patch.
-- Your finding says "either X or Y". Pick.
-- Your review body restates which comments carry suggestions, or how many
-  there are. That is metadata about your review, not information about their
-  code — the body is empty instead.
+  this" — and continuing past it. The concession already decided the size.
+- Citing any file but the anchor.
+- Calling a docstring a lie. "Lets tests verify X without reaching in"
+  describes encapsulation, not avoidance.
+- Two findings that reference each other. Check whether A stands alone.
+- "Could in principle" / "a future maintainer might".
+- Pasting a suggestion block you have not read against the lines it
+  replaces.
+- A fix whose recovery path calls the thing that just failed.
+- Asking for a test on a path you have not traced.
+- A nit whose fix needs a new type, abstraction, or signature change.
+- Shortening a comment. Everything in it is a fresh claim again.
+- An anchor that is a bare filename, or a line no hunk covers.
+- Two comments on one file you have not read as a single patch.
+- A finding that says "either X or Y".
+- A body that describes your review instead of their code.
+- A finding with no observation only reading the code could have produced.
+- Padding to make the review feel thorough.
+- A first sentence that is a mechanism, with the symptom never arriving.
 
 ## Rationalization Table
 
@@ -339,19 +327,6 @@ can be replaced without touching the inline comments:
 | "I'll let the author pick which branch to take" | Whoever applies it picks, and then writes a justification for the branch they chose. Baseline 6's was overclaimed and shipped in a JSDoc. |
 | "Every comment checks out on its own" | They land together. Two comments on one file are one patch, and Baseline 6's pair cancelled each other. |
 | "The fix is small, it cannot reach another finding" | Baseline 6's three-line timeout move admitted an abort that the classifier bucketed as the exact thing the next comment was about. |
-
-## Anti-patterns
-
-- Listing N findings none of which carry a concrete observation.
-- "I dispatched the reviewer, here's what it said" — delegates filtering
-  to the user.
-- Claiming "I verified" where the finding shows nothing that could only
-  come from reading the line.
-- Padding minor findings to make the review feel thorough.
-- Relaying a suggestion block you never read against the lines it replaces.
-- A finding whose first sentence is a mechanism and whose symptom never
-  arrives.
-- A review body that describes the review instead of the code.
 
 ## Real-World Baseline
 
