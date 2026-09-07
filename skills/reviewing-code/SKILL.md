@@ -106,7 +106,22 @@ string it pasted. Assume that is where your errors are.
    - **Anchor on a path, not a basename.** In a repo with a mirrored test
      tree, `useThing.test.tsx` sends the reader to the wrong one.
 
-6. **Emit it in the shape below.** Verification decides *what* is relayed;
+6. **Verify the assembled review.** Step 5 verifies one remedy at a time.
+   These three are properties of the whole set, and they survive a step 5
+   you followed faithfully — Baseline 6 shipped all three:
+   - **Two comments touching one file are one patch.** Read them against
+     each other. Each can be right alone and contradict the other when
+     both land — one deleting a thing the other's block re-asserts.
+   - **What new inputs does each fix admit, and where do they land?**
+     Including into another finding. A fix that moves a timeout past a body
+     read admits an abort from the body read, which the error classifier
+     buckets as the exact misclassification a sibling comment is about.
+   - **Enumerate every path through old and new, not just the defect
+     path.** "Does this block close the race" is a different question from
+     "what else does this now do", and a block can pass the first while
+     turning a `not-found` throw into a silent success.
+
+7. **Emit it in the shape below.** Verification decides *what* is relayed;
    the output contract decides *how*.
 
 ## Output Contract
@@ -123,7 +138,13 @@ Each finding is three parts, in this order:
 3. The fix. When the review targets a PR, this is a GitHub ` ```suggestion `
    block holding the exact replacement text for those anchor lines —
    verify the anchors against the file first, since one bad anchor 422s an
-   entire review. Otherwise, one line of remediation.
+   entire review. Otherwise, one line of remediation. Lines outside every
+   diff hunk take no block; see **Posting to GitHub**.
+
+A fix that offers a choice is not finished. Whoever applies the review
+closes the fork, and then invents a rationale for the branch they picked.
+Recommend one. If your own argument for the finding favours a branch, say
+which, and check that branch is buildable before you name the other.
 
 Order findings most-severe first. That ordering is the severity signal, and
 the only one. A blocker does not earn more words than a nit — it earns the
@@ -232,52 +253,57 @@ working memory is.
 Submit one review, not N comments: `POST /repos/{owner}/{repo}/pulls/{n}/reviews`
 with a `comments` array. One notification, one thread group.
 
+**A comment lands only on a line inside a diff hunk.** Compute the ranges
+before writing blocks — `git diff -U3 BASE..HEAD -- <path> | grep '^@@'` —
+because on a PR that modifies existing files the lines you most want to fix
+are unchanged context, and the hunk's few context lines are all you get. A
+finding anchored outside every hunk becomes a plain comment on the nearest
+in-hunk line, naming the out-of-hunk lines in its text. New files are
+wholly in the diff, so this bites exactly the long-lived files.
+
 The review body carries only what cannot be derived from the inline
-comments — which suggestions must be applied together, and manual steps no
-suggestion covers (a new config key, an added import). When there is
-nothing of that kind, the body is empty. A body already submitted can be
-replaced without touching the inline comments:
+comments — manual steps no suggestion covers (a new config key, an added
+import), and a caveat about the code that no single anchor owns. When there
+is nothing of that kind, the body is empty. Two comments that must be
+applied together say so in their own text; a body repeating it is
+redundant. **GitHub renders no numbering on inline comments**, so a body
+that says "comment 3" points at a label the reader cannot see — refer to a
+comment by its file and the symbol it lands on. A body already submitted
+can be replaced without touching the inline comments:
 `PUT /repos/{owner}/{repo}/pulls/{n}/reviews/{review_id}`.
 
 ## Red Flags — stop and re-verify
 
-- About to relay a finding that cites a flag, method, or line you haven't
-  read.
-- About to assert a failure path you reasoned about but never executed,
-  when the trigger is reproducible in a scratch script.
-- Verifying hardest on the findings you expect to reject and least on the
-  ones you are about to relay. The relayed ones are the ones that reach
-  the author.
-- Illustrating a test gap with a mutation nobody would make ("change this
-  constant and no test fails"). An absurd mutation argues the constant is
-  obvious, not that the gap matters.
+Triggers, not arguments. Each one's reasoning lives in the step it belongs
+to; if a flag fires and you want the case for it, that is where it is.
+
+- Citing a flag, method or line you have not read to the end of.
+- Asserting a failure path you never executed, when a scratch script would
+  run it.
+- Verifying hardest on the findings you expect to reject. The relayed ones
+  are the ones that reach the author.
+- Illustrating a test gap with a mutation nobody would make. An absurd
+  mutation argues the constant is obvious, not that the gap matters.
 - Writing a concession into a finding — "low impact", "clients tolerate
-  this", "consistent with the existing model" — and then continuing past
-  it. The concession has already decided the size: one line, then stop.
-- Your finding cites a file other than the anchor. Cutting the second
-  citation almost never loses the point, and keeping it is usually you
-  showing your verification rather than the author needing it.
-- Reviewer claims a docstring "lies" — read it carefully. "Lets tests
-  verify X without reaching in" describes encapsulation (the function
-  absorbs the brittle access), not avoidance.
-- Two findings reference each other (A is a problem because of B). Check
-  if A is real standalone.
-- "Could in principle" / "a future maintainer might" / "if someone runs
-  with -O" — drop unless the condition is plausible for this codebase.
-- About to paste a suggestion block you have not read against the lines it
-  replaces. The block is code and nothing type-checks it for you.
-- Your fix's recovery path calls the same thing that just failed. Say which
-  case it closes, or drop the fix.
-- Asking for a test on a path you have not traced. If the trigger cannot
-  occur, the finding was that the code is unreachable, not that it is
-  untested.
-- A nit whose fix needs a new type, a new abstraction, or a signature change
-  across several files. The size of the remedy is evidence about the finding.
-- You just shortened a comment. Everything in it is a fresh claim again.
-- Your anchor is a bare filename.
-- Your review body restates which comments carry suggestions, or how many
-  there are. That is metadata about your review, not information about their
-  code — the body is empty instead.
+  this" — and continuing past it. The concession already decided the size.
+- Citing any file but the anchor.
+- Calling a docstring a lie. "Lets tests verify X without reaching in"
+  describes encapsulation, not avoidance.
+- Two findings that reference each other. Check whether A stands alone.
+- "Could in principle" / "a future maintainer might".
+- Pasting a suggestion block you have not read against the lines it
+  replaces.
+- A fix whose recovery path calls the thing that just failed.
+- Asking for a test on a path you have not traced.
+- A nit whose fix needs a new type, abstraction, or signature change.
+- Shortening a comment. Everything in it is a fresh claim again.
+- An anchor that is a bare filename, or a line no hunk covers.
+- Two comments on one file you have not read as a single patch.
+- A finding that says "either X or Y".
+- A body that describes your review instead of their code.
+- A finding with no observation only reading the code could have produced.
+- Padding to make the review feel thorough.
+- A first sentence that is a mechanism, with the symptom never arriving.
 
 ## Rationalization Table
 
@@ -298,106 +324,16 @@ replaced without touching the inline comments:
 | "I grepped the symbol, that is the companion list" | Prose has no symbol. Grep the number and the words of the claim, or you will ship a finding that leaves three stale restatements behind. |
 | "It is shorter now, so it is clearer" | Six facts in forty words is denser, not clearer. Symptom first, one fact per sentence, references at the end. |
 | "Trimming cannot introduce an error, it only removes words" | It removed the qualifier that made the claim true. Baseline 5 lost four corrected claims and an anchor to one compression pass. |
-
-## Anti-patterns
-
-- Listing N findings none of which carry a concrete observation.
-- "I dispatched the reviewer, here's what it said" — delegates filtering
-  to the user.
-- Claiming "I verified" where the finding shows nothing that could only
-  come from reading the line.
-- Padding minor findings to make the review feel thorough.
-- Relaying a suggestion block you never read against the lines it replaces.
-- A finding whose first sentence is a mechanism and whose symptom never
-  arrives.
-- A review body that describes the review instead of the code.
+| "I'll let the author pick which branch to take" | Whoever applies it picks, and then writes a justification for the branch they chose. Baseline 6's was overclaimed and shipped in a JSDoc. |
+| "Every comment checks out on its own" | They land together. Two comments on one file are one patch, and Baseline 6's pair cancelled each other. |
+| "The fix is small, it cannot reach another finding" | Baseline 6's three-line timeout move admitted an abort that the classifier bucketed as the exact thing the next comment was about. |
 
 ## Real-World Baseline
 
-**Baseline 1** — a PR on an infra-scripts repo:
-subagent returned 19 findings; verification surfaced 3 that hold up
-(after user-side correction on one). Net 16 dropped as hypothetical,
-premise-incorrect, out-of-scope, or style-nit. User filter work: zero
-instead of 19.
-
-**Baseline 2** — a PR on a web-client repo; the baseline for the Output
-Contract. Verification worked (22 of 28 findings survived), but
-the relay took three user corrections to reach a usable shape: verbose
-severity-grouped prose, then the same content re-asked for as inline
-suggestions, then a submitted review body opening "Reviewed the full diff
-… no blockers on data integrity or authorization". On that last one:
-"It's obvious the review has been done BECAUSE THERE ARE REVIEW COMMENTS.
-Blockers are self evident." The findings were right all three times; only
-the shape was wrong, which is why the fix is a recipe rather than a
-prohibition (see `superpowers:writing-skills`, Match the Form to the
-Failure).
-
-**Baseline 3** — a PR on a backend monorepo; the baseline for
-checking consequences. Every cited line was read, and every premise was
-correct; of four relayed findings one still had to be withdrawn outright
-and another corrected, because the error sat one step downstream of the
-observation. A pagination claim ("page 2 re-returns the user") was
-inferred from a correctly-observed missing guard and died on tracing
-`PagedResults.complete()`, which emits no next link for a single-result
-search. A test-gap finding was illustrated with a mutation dismissed on
-sight as absurd — of course the IdP alias has to match the provider;
-that's the whole idea. And a fifth, real finding had been dropped as
-unverifiable only because `yarl` was not installed; a scratch venv later
-confirmed it retargets the request to any route on the service.
-
-The tell was an asymmetry visible in the transcript: execution-tier checks
-(interpreter version, dependency features, column types) were run freely
-on the findings expected to be *rejected*, and not once on the findings
-about to be *relayed*.
-
-The resurrected finding then failed the same way one layer down. Its
-outcome half was executed — `yarl` does resolve `../../login/events`
-against the request path — while its trigger half, whether the search
-parser could put that string in the field at all, was assumed. It could,
-as it turned out. Being right by luck is not verification, and "what
-would have to be true for an operator to reach this?" is the question the
-vivid half makes easy to skip.
-
-The relay then failed on size rather than substance. Two nits ran to
-three paragraphs each — one carrying a traversal table, the other a
-three-location refactor plan appended to a finding whose own text
-conceded "clients demonstrably tolerate it". Both were deleted as
-overreach before the actual verdict arrived: "I don't mind the finding
-of the issue, but the wall of text makes it appear to be major whereas
-in reality, they're nits." Neither finding was wrong. Re-posted at one
-or two lines, both were fine.
-
-**Baseline 4** — the next PR on the same monorepo; the baseline for
-reading the PR's purpose, and for whose benefit a finding is written.
-Seven reviewer findings went in and two came out, and the top one was
-both too long and wrong. Too long because step 3 said to relay "with
-proof", and proof had been read as something the comment must display:
-"This is still not something I would post to a professional human
-software developer. I don't need to educate them, just point out the
-problem and the fix." Wrong because the PR was titled "Add an env var to
-disable stats metrics", and the finding argued the metrics
-should stay on — "the WHOLE POINT of the PR … Did you just not take that
-in as context?" The subagent raised it as its own top Important finding
-and every cited line checked out, so verification-as-practised waved it
-through; nothing in the workflow asked whether the change was the point
-of the change. Net after correction: one nit.
-
-**Baseline 5** — a 103-file feature PR on a Firebase and React monorepo; the
-baseline for verifying remedies. Sixteen findings relayed over two cycles,
-each cycle applied by a junior-persona agent to a throwaway branch whose fix
-diff was then reviewed. No relayed finding was ever shown false. Eleven
-defects were found in the review anyway, every one in what followed the
-finding.
-
-Two are worth repeating because they are counterintuitive. "Delete the
-unreachable branch" was impossible as written: the branch was the runtime
-half of a type narrowing, so deleting it forced two new types, a predicate
-and a signature change across four functions — a refactor set in motion by a
-nit. And a prescribed test setup ("a part whose price fetch throws") could
-not occur at all, because the code turned every such rejection into a field
-and returned success; the finding should have been that the path was
-unreachable.
-
-Six of the eleven were one mistake repeated: a finding invalidated a stated
-claim or moved a written-out number, and grepping the symbol found none of
-the prose restating it.
+Six runs on real pull requests, with what each cost: how many findings a
+subagent returned, how many survived verification, and which specific
+error each surviving rule above was written to stop. Read
+`references/baselines.md` when a rule here looks arbitrary or when you are
+weighing whether to drop a finding you cannot quite justify — the
+baselines are the evidence for every rule in this file, and Baselines 5
+and 6 are the evidence for steps 5 and 6 specifically.
