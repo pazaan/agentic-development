@@ -14,7 +14,13 @@ orders to relay.
 
 **Core principle:** no finding leaves this workflow unverified — its
 premise read at the cited file:line, its consequence executed wherever it
-can be.
+can be, and its remedy read in place.
+
+Verifying findings is the part that already works. Two full cycles of this
+skill (Baseline 5) produced eleven defects and not one was a false finding:
+every one sat in something added *after* the finding — the fix it
+prescribed, the test setup it named, the companion locations it listed, the
+string it pasted. Assume that is where your errors are.
 
 ## Workflow
 
@@ -72,7 +78,35 @@ can be.
    Don't pad. If 20 survive, surface 20. Coverage on real bugs, zero noise
    from imagined ones.
 
-5. **Emit it in the shape below.** Verification decides *what* is relayed;
+5. **Verify the remedy, not just the finding.** Everything after the defect
+   sentence is unverified assertion until you check it, and it is where this
+   skill's errors actually live. Before the review leaves:
+   - **Read each suggestion block in place**, against the anchor lines it
+     replaces. It is code. A block that duplicates a sibling literal, drops
+     a guard the surrounding lines rely on, or removes a check the code
+     below needs for its types will not be caught by reading the block on
+     its own.
+   - **Trace any setup you prescribe.** "Add a test for a part whose fetch
+     throws" is a reachability claim and needs the same trace as a finding's
+     own consequence. Twice in Baseline 5 the prescribed trigger could not
+     occur: the code turned every such failure into a value and returned
+     normally.
+   - **Enumerate companions by grepping the value, not the symbol.** When a
+     finding moves a documented number or falsifies a stated claim, grep the
+     number and the claim's words. Grep finds `FOO_TTL_MS`; it does not find
+     "authenticated clients may read it", a 60s spelled out in prose, or a
+     test title describing the behaviour you just deleted. Six of Baseline
+     5's eleven defects are this one mistake.
+   - **Size what the fix sets in motion.** If a one-line nit forces new
+     types, a predicate and threading them through four functions, the
+     finding was wrong rather than underspecified. Drop it.
+   - **Ask what happens when the fix's own mechanism fails.** "Write X
+     instead" is not a fix when writing X fails the same way that got you
+     here. Name the case it closes and the case it does not.
+   - **Anchor on a path, not a basename.** In a repo with a mirrored test
+     tree, `useThing.test.tsx` sends the reader to the wrong one.
+
+6. **Emit it in the shape below.** Verification decides *what* is relayed;
    the output contract decides *how*.
 
 ## Output Contract
@@ -91,21 +125,68 @@ Each finding is three parts, in this order:
    verify the anchors against the file first, since one bad anchor 422s an
    entire review. Otherwise, one line of remediation.
 
-Order findings most-severe first. That ordering is the severity signal.
+Order findings most-severe first. That ordering is the severity signal, and
+the only one. A blocker does not earn more words than a nit — it earns the
+top of the list.
 
 A finding whose fix spans non-contiguous lines names the companion
 locations inside part 2. A finding you could not reduce to a defect —
 a design decision worth questioning — still gets the same three parts,
 with part 2 stating what makes it a question.
 
-**Length tracks severity.** Size is the first severity signal the reader
-takes in, ahead of any of the words, so it has to match the finding.
-Part 2 is one sentence. A bug may take two — the defect, then the
-trigger. Nothing takes three. A table, a multi-paragraph rationale, or a
-multi-file remediation plan claims blocker status; when the finding is
-not a blocker, that size is telling you something. Usually the finding is
-fine and only its size is wrong, so shrink it rather than dropping it —
-but check which, because sometimes the size is the symptom.
+### How a finding is written
+
+Five rules. A ceiling on words is the weakest of them, and on its own it
+makes things worse: told "one sentence", a finding holding six facts becomes
+six clauses chained with commas and dashes — shorter than the long version
+and harder to read.
+
+**Two sentences, whatever the severity.** The defect, then its trigger if it
+needs one. Nothing takes three. This is a ceiling, not a target: describing
+something accurately in fewer words is always available, and a finding that
+will not fit is telling you something (see the tell below).
+
+**The first sentence names the symptom** — what breaks, and for whom.
+Mechanism is the second sentence. A reader scanning twenty comments needs
+the consequence in the first six words; a comment that opens with an
+identifier makes them assemble it themselves.
+
+**One fact per sentence.** Two only when they are the same fact from both
+ends.
+
+**References go at the end**, on their own line, never mid-clause. Each
+inline `path.ts:41` is a context switch the eye must park and come back from.
+
+**Nothing stands in front of the defect.** No epistemic preface ("a question
+rather than a finding", "a missing affordance rather than a wrong rule"), and
+never the author's own comment quoted back inside one of your clauses — that
+reads as litigation, not information.
+
+Before:
+
+> The phase decision uses `job.phase` read at line 76, so when
+> `closeDispatch` commits `completed` in that window the update omits
+> `phase`, the enqueued dispatch early-exits at `runSignifyFetchJob.ts:505`,
+> and the parts just reset to `pending` are stranded. Reading it inside the
+> committing transaction keeps this file's "phase is left alone while a job
+> is running" intact.
+
+After:
+
+> Retry can be silently lost. `phase` comes from the read at line 76 — if the
+> dispatch commits `completed` in between, this update omits `phase`, the
+> enqueued task early-exits, and the reset parts stay `pending`. Read it
+> inside the transaction.
+
+Same facts, same length. The second answers "what breaks" before explaining
+anything, so the reader can stop after four words and still know whether
+this one is theirs.
+
+**Compression is a new edit.** Shortening introduces claims exactly the way
+writing did: a trimmed citation loses the qualifier that made it true, a
+merged sentence invents a causal link. One compression pass in Baseline 5
+silently reverted four already-corrected claims and broke an anchor. Re-read
+against the file *after* shortening.
 
 ### The wall of text is the tell
 
@@ -137,6 +218,14 @@ archaeology and cross-service precedent is not what a real defect needs —
 it is what a finding needs when it has to talk the reader into a premise
 the author already rejected on purpose. When a finding will not fit in a
 sentence, suspect the finding before you start trimming the prose.
+
+Its mirror is a forty-word comment nobody can read. "The modes dedup through
+different cell paths, record rows by `value.docId`, manual rows by
+`value.fields.manufacturersProductId.value`, and neither shape has the
+other's field, so the table-wide identity the PR describes holds only within
+one mode" is short and still costs two readings, because six facts and four
+citations arrive before the verb. Length was never the target. The reader's
+working memory is.
 
 ## Posting to GitHub
 
@@ -175,6 +264,20 @@ replaced without touching the inline comments:
   if A is real standalone.
 - "Could in principle" / "a future maintainer might" / "if someone runs
   with -O" — drop unless the condition is plausible for this codebase.
+- About to paste a suggestion block you have not read against the lines it
+  replaces. The block is code and nothing type-checks it for you.
+- Your fix's recovery path calls the same thing that just failed. Say which
+  case it closes, or drop the fix.
+- Asking for a test on a path you have not traced. If the trigger cannot
+  occur, the finding was that the code is unreachable, not that it is
+  untested.
+- A nit whose fix needs a new type, a new abstraction, or a signature change
+  across several files. The size of the remedy is evidence about the finding.
+- You just shortened a comment. Everything in it is a fresh claim again.
+- Your anchor is a bare filename.
+- Your review body restates which comments carry suggestions, or how many
+  there are. That is metadata about your review, not information about their
+  code — the body is empty instead.
 
 ## Rationalization Table
 
@@ -190,6 +293,11 @@ replaced without touching the inline comments:
 | "The library isn't installed, so this one is unverifiable" | Unverifiable means you tried. Install it, then decide. |
 | "I reasoned through the call chain, checking it would tell me the same thing" | In Baseline 3 below it did not: one relayed finding died and one dropped finding came back once the behaviour was checked rather than inferred. |
 | "The title is loose wording; the code is what I review" | The title is the requirement. When it and the code agree, a finding against both is a finding against the deliverable. |
+| "The suggestion is only a few lines, I can see it is right" | So is most broken code. Read it against the lines it replaces. Baseline 5's duplicated UI string was three words. |
+| "The author will work out the rest of the fix" | They will implement what you wrote. An underspecified remedy becomes a refactor you did not ask for, or a test that covers nothing. |
+| "I grepped the symbol, that is the companion list" | Prose has no symbol. Grep the number and the words of the claim, or you will ship a finding that leaves three stale restatements behind. |
+| "It is shorter now, so it is clearer" | Six facts in forty words is denser, not clearer. Symptom first, one fact per sentence, references at the end. |
+| "Trimming cannot introduce an error, it only removes words" | It removed the qualifier that made the claim true. Baseline 5 lost four corrected claims and an anchor to one compression pass. |
 
 ## Anti-patterns
 
@@ -199,6 +307,10 @@ replaced without touching the inline comments:
 - Claiming "I verified" where the finding shows nothing that could only
   come from reading the line.
 - Padding minor findings to make the review feel thorough.
+- Relaying a suggestion block you never read against the lines it replaces.
+- A finding whose first sentence is a mechanism and whose symptom never
+  arrives.
+- A review body that describes the review instead of the code.
 
 ## Real-World Baseline
 
@@ -269,3 +381,23 @@ in as context?" The subagent raised it as its own top Important finding
 and every cited line checked out, so verification-as-practised waved it
 through; nothing in the workflow asked whether the change was the point
 of the change. Net after correction: one nit.
+
+**Baseline 5** — a 103-file feature PR on a Firebase and React monorepo; the
+baseline for verifying remedies. Sixteen findings relayed over two cycles,
+each cycle applied by a junior-persona agent to a throwaway branch whose fix
+diff was then reviewed. No relayed finding was ever shown false. Eleven
+defects were found in the review anyway, every one in what followed the
+finding.
+
+Two are worth repeating because they are counterintuitive. "Delete the
+unreachable branch" was impossible as written: the branch was the runtime
+half of a type narrowing, so deleting it forced two new types, a predicate
+and a signature change across four functions — a refactor set in motion by a
+nit. And a prescribed test setup ("a part whose price fetch throws") could
+not occur at all, because the code turned every such rejection into a field
+and returned success; the finding should have been that the path was
+unreachable.
+
+Six of the eleven were one mistake repeated: a finding invalidated a stated
+claim or moved a written-out number, and grepping the symbol found none of
+the prose restating it.
