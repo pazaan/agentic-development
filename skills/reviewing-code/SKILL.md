@@ -106,7 +106,22 @@ string it pasted. Assume that is where your errors are.
    - **Anchor on a path, not a basename.** In a repo with a mirrored test
      tree, `useThing.test.tsx` sends the reader to the wrong one.
 
-6. **Emit it in the shape below.** Verification decides *what* is relayed;
+6. **Verify the assembled review.** Step 5 verifies one remedy at a time.
+   These three are properties of the whole set, and they survive a step 5
+   you followed faithfully — Baseline 6 shipped all three:
+   - **Two comments touching one file are one patch.** Read them against
+     each other. Each can be right alone and contradict the other when
+     both land — one deleting a thing the other's block re-asserts.
+   - **What new inputs does each fix admit, and where do they land?**
+     Including into another finding. A fix that moves a timeout past a body
+     read admits an abort from the body read, which the error classifier
+     buckets as the exact misclassification a sibling comment is about.
+   - **Enumerate every path through old and new, not just the defect
+     path.** "Does this block close the race" is a different question from
+     "what else does this now do", and a block can pass the first while
+     turning a `not-found` throw into a silent success.
+
+7. **Emit it in the shape below.** Verification decides *what* is relayed;
    the output contract decides *how*.
 
 ## Output Contract
@@ -123,7 +138,13 @@ Each finding is three parts, in this order:
 3. The fix. When the review targets a PR, this is a GitHub ` ```suggestion `
    block holding the exact replacement text for those anchor lines —
    verify the anchors against the file first, since one bad anchor 422s an
-   entire review. Otherwise, one line of remediation.
+   entire review. Otherwise, one line of remediation. Lines outside every
+   diff hunk take no block; see **Posting to GitHub**.
+
+A fix that offers a choice is not finished. Whoever applies the review
+closes the fork, and then invents a rationale for the branch they picked.
+Recommend one. If your own argument for the finding favours a branch, say
+which, and check that branch is buildable before you name the other.
 
 Order findings most-severe first. That ordering is the severity signal, and
 the only one. A blocker does not earn more words than a nit — it earns the
@@ -232,11 +253,23 @@ working memory is.
 Submit one review, not N comments: `POST /repos/{owner}/{repo}/pulls/{n}/reviews`
 with a `comments` array. One notification, one thread group.
 
+**A comment lands only on a line inside a diff hunk.** Compute the ranges
+before writing blocks — `git diff -U3 BASE..HEAD -- <path> | grep '^@@'` —
+because on a PR that modifies existing files the lines you most want to fix
+are unchanged context, and the hunk's few context lines are all you get. A
+finding anchored outside every hunk becomes a plain comment on the nearest
+in-hunk line, naming the out-of-hunk lines in its text. New files are
+wholly in the diff, so this bites exactly the long-lived files.
+
 The review body carries only what cannot be derived from the inline
-comments — which suggestions must be applied together, and manual steps no
-suggestion covers (a new config key, an added import). When there is
-nothing of that kind, the body is empty. A body already submitted can be
-replaced without touching the inline comments:
+comments — manual steps no suggestion covers (a new config key, an added
+import), and a caveat about the code that no single anchor owns. When there
+is nothing of that kind, the body is empty. Two comments that must be
+applied together say so in their own text; a body repeating it is
+redundant. **GitHub renders no numbering on inline comments**, so a body
+that says "comment 3" points at a label the reader cannot see — refer to a
+comment by its file and the symbol it lands on. A body already submitted
+can be replaced without touching the inline comments:
 `PUT /repos/{owner}/{repo}/pulls/{n}/reviews/{review_id}`.
 
 ## Red Flags — stop and re-verify
@@ -275,6 +308,11 @@ replaced without touching the inline comments:
   across several files. The size of the remedy is evidence about the finding.
 - You just shortened a comment. Everything in it is a fresh claim again.
 - Your anchor is a bare filename.
+- Your anchor is a line no hunk covers. The post 422s, or the comment
+  silently lands somewhere else.
+- Two of your comments touch one file and you have not read them as a
+  single patch.
+- Your finding says "either X or Y". Pick.
 - Your review body restates which comments carry suggestions, or how many
   there are. That is metadata about your review, not information about their
   code — the body is empty instead.
@@ -298,6 +336,9 @@ replaced without touching the inline comments:
 | "I grepped the symbol, that is the companion list" | Prose has no symbol. Grep the number and the words of the claim, or you will ship a finding that leaves three stale restatements behind. |
 | "It is shorter now, so it is clearer" | Six facts in forty words is denser, not clearer. Symptom first, one fact per sentence, references at the end. |
 | "Trimming cannot introduce an error, it only removes words" | It removed the qualifier that made the claim true. Baseline 5 lost four corrected claims and an anchor to one compression pass. |
+| "I'll let the author pick which branch to take" | Whoever applies it picks, and then writes a justification for the branch they chose. Baseline 6's was overclaimed and shipped in a JSDoc. |
+| "Every comment checks out on its own" | They land together. Two comments on one file are one patch, and Baseline 6's pair cancelled each other. |
+| "The fix is small, it cannot reach another finding" | Baseline 6's three-line timeout move admitted an abort that the classifier bucketed as the exact thing the next comment was about. |
 
 ## Anti-patterns
 
@@ -401,3 +442,25 @@ unreachable.
 Six of the eleven were one mistake repeated: a finding invalidated a stated
 claim or moved a written-out number, and grepping the symbol found none of
 the prose restating it.
+
+**Baseline 6** — the next PR on that monorepo; the baseline for step 6 and
+the posting mechanics. Fourteen findings, thirteen sound premises, and
+four defects step 5 could not see because each belonged to the set rather
+than to a finding. Two comments on one file cancelled — one deleted a
+cache tier, the other's block re-asserted the "all three kinds" prose that
+deletion falsifies. One fix moved a timeout past a body read and admitted
+an abort the classifier buckets as `permanent`, which was the next
+comment's entire subject. One block closed a race and, in the same four
+lines, turned a `not-found` throw into a silent success. And "wire it or
+delete it" was decided by the junior applying it, who wrote an overclaimed
+justification into a JSDoc.
+
+Mechanically: the body cited "comment 1" and "comment 3", labels GitHub
+does not render, so most of it was unresolvable; and the highest-impact
+finding could carry no block at all, its lines being unchanged context
+outside every hunk — found only after the blocks were written.
+
+The single false premise failed on a Red Flag already listed. A
+store-registry finding cited the `registry.set` inside `connect` as the
+only one; construction registers too, forty lines below, which makes the
+described failure impossible.

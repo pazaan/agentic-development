@@ -9,6 +9,7 @@ this plugin).
 |------------------------------------------------|--------------------------------------------|---------------------------------------------|------------------|-------------|
 | `agentic-development:caveman-micro`            | terse-response request                     | Lead caveman mode block                     | user-controlled  | (this repo) |
 | `agentic-development:reviewing-code`           | review request                             | Reviewer five-pass body                     | user-controlled  | (this repo) |
+| `agentic-development:review-rehearsal`         | explicit request to rehearse a review before posting | (none — new capability)           | user-controlled  | (this repo) |
 | `agentic-development:stacked-prs`              | raw git rebase / push --force / amend / merge; any stack operation | Coder git-spice safety block   | user-controlled  | (this repo) |
 | `agentic-development:tester-browser-sweep`     | Tester loop                                | Tester axe/console/functional inline body   | user-controlled  | (this repo) |
 | `agentic-development:pre-commit-grep`          | Coder pre-commit                           | Coder existing-pattern + third-party verify | user-controlled  | (this repo) |
