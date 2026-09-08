@@ -29,7 +29,8 @@ Lead presents the plan; nothing spawns until you approve.
 ### Skills
 
 - **caveman-micro** — lightweight token-efficient response mode; drops filler/articles/pleasantries while keeping technical substance exact.
-- **reviewing-code** — front door for code review dispatch; composes `superpowers:requesting-code-review` with `superpowers:receiving-code-review` so no reviewer-subagent finding leaves the workflow without verification against the cited file:line.
+- **reviewing-code** — front door for code review dispatch; composes `superpowers:requesting-code-review` with `superpowers:receiving-code-review` so no finding leaves the workflow without its premise, consequence and remedy verified against the cited file:line. Baselines load on demand from `references/baselines.md`.
+- **review-rehearsal** — request-only dry run of a *written review* before it is posted: a junior-persona agent applies the review on a throwaway branch, a senior-persona agent reviews the result, and the output is a corrected review. Costs two subagents and a worktree.
 - **stacked-prs** — detects which stack tool owns the repo (git-spice, GitHub Stacks, or plain PRs) and routes raw-git operations (`rebase`, `push --force`, `commit --amend`, `merge main`) to that tool's equivalent so stack tracking doesn't silently break.
 - **team-handoff** — Lead's binding load and spawn/message/plan-storage primitives.
 - **ticket-as-contract** — Plan-note template enforcing AC traceability; Reviewer adjudication routing.
@@ -37,17 +38,35 @@ Lead presents the plan; nothing spawns until you approve.
 - **pr-body-protocol** — PR description shape + per-stack-tool composition command + commit-body KEEP/DROP rules.
 - **tester-browser-sweep** — Tester's functional matrix + axe a11y + console/network capture via the Claude Code Chrome extension (`claude-in-chrome` MCP).
 
+`SKILLS.md` maps every skill the role set references — including the
+upstream ones from `superpowers` — to its trigger and drift owner.
+
 ### Hooks (auto-wired on install via `plugin.json`)
 
+Skill-recall pair — two-stage forcing function for skills the agent is
+observed to skip once they decay out of attention:
+
+- `userpromptsubmit-skill-nudge.sh` (`UserPromptSubmit`) — soft nudge. Injects a `<system-reminder>` naming the skill when the prompt looks skill-shaped and that skill hasn't been invoked in the last `$SKILL_NUDGE_RECENCY` transcript entries (default 50).
+- `pretooluse-skill-gate.sh` (`PreToolUse`, matcher `Bash`) — hard gate. Exits `2` on PR-write / review-write commands when the required skill was never invoked this session. Exempts `--help`, `-h`, `--dry-run`.
+
+Stop hooks:
+
 - `task-completed-checklist.sh` (`Stop`) — checks last assistant message against `$PROJECT_PRECOMMIT_CHECKLIST`.
-- `task-completed-caveman-bleed.sh` (`Stop`) — flags caveman-mode bleed in artifacts.
+- `task-completed-caveman-bleed.sh` (`Stop`) — flags caveman-mode bleed in artifacts, over `$CAVEMAN_BLEED_THRESHOLD` (default 40).
+
+All four no-op (exit 0) when `jq` is missing, `transcript_path` is absent,
+or the relevant env var / file is unset. See `hooks/README.md` for the
+full gate/nudge trigger table and how to add a rule.
 
 ### Agents
 
-Canonical role bodies under `agents/`: lead, coder, reviewer, tester,
-backend-tester (persistent); adr-steward, ci-triager, db-migration-reviewer,
-explorer, memory-consolidator, pm-reviewer, retro-writer, security-reviewer,
-skill-drift-check, upgrader (ephemeral).
+Canonical role bodies under `agents/`:
+
+- **Persistent** (spawned with a `name`, addressable via `SendMessage`): lead, coder, reviewer, tester, backend-tester.
+- **Ephemeral** (spawned without a `name`, report via task-notification): adr-steward, ci-triager, db-migration-reviewer, explorer, pm-reviewer, security-reviewer, upgrader.
+- **Scheduled / command-triggered**: memory-consolidator (`/consolidate-memory`), retro-writer (`/retro`), skill-drift-check (cron — see `docs/schedule-drift-check.md`).
+
+`ROLES.md` holds the spawn convention and the cross-role interaction rules.
 
 ## Install
 
@@ -64,9 +83,9 @@ Then `/plugin list` to confirm it's enabled.
 
 Lead spawns every role with the `Agent` tool. No setup, no env flag, and
 no team-creation call — `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` and
-`TeamCreate` belonged to an earlier runtime and are no longer used. If a
-session is refusing to spawn over a missing teams flag, it is running a
-pre-2.4.0 copy of this plugin.
+`TeamCreate` belonged to an earlier runtime and are no longer used. A
+session refusing to spawn over a missing teams flag is following stale
+instructions, not this plugin.
 
 ### Chrome extension (Tester)
 
