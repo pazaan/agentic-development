@@ -35,6 +35,7 @@ Lead presents the plan; nothing spawns until you approve.
 - **team-handoff** — Lead's binding load and spawn/message/plan-storage primitives.
 - **ticket-as-contract** — Plan-note template enforcing AC traceability; Reviewer adjudication routing.
 - **pre-commit-grep** — Coder's existing-pattern reuse + third-party-claim verification checks.
+- **no-bullshit-comments** — a comment earns its place only by saying what the code cannot; kills line-narration, self-defending phrasing, references a reader cannot resolve from the repo, and counts that go stale where a symbol name belongs.
 - **pr-body-protocol** — PR description shape + per-stack-tool composition command + commit-body KEEP/DROP rules.
 - **tester-browser-sweep** — Tester's functional matrix + axe a11y + console/network capture via the Claude Code Chrome extension (`claude-in-chrome` MCP).
 
