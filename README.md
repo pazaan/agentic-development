@@ -10,11 +10,10 @@ Personal Claude Code plugin. Distributes my skills/commands/agents/hooks across 
 
 Activates Lead behavior: loads project
 bindings (`agentic-development.config.yml`), fetches the ticket if the
-argument matches `$TICKET_SOURCE`'s ID pattern, then **self-routes** to
-either a direct plan note or `iterative-development:iterative-development`
-based on scope rules (subsystem count, AC bullet count, word count,
-explicit phase/milestone framing, `--iterative` flag). Borderline cases
-ask you once instead of guessing.
+argument matches `$TICKET_SOURCE`'s ID pattern, then drafts a plan note
+with AC traceability — or spawns `explorer` when the spec reads as a
+spike. A spec too large to hold as one contract stops and asks you
+whether to split it, instead of guessing.
 
 Lead presents the plan; nothing spawns until you approve.
 
