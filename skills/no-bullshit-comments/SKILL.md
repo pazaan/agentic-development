@@ -95,6 +95,16 @@ Passes:
 A symbol cannot drift from the implementation. A doc-section number and a
 hardcoded count both can.
 
+## Enforcement
+
+`hooks/posttooluse-comment-check.sh` reads the comment lines each `Edit` /
+`Write` added and reports the mechanical failures — unresolvable
+references, self-defending phrasing, spelled counts, a section number
+carrying content, and comment text that echoes the identifiers below it.
+It says nothing on an edit that added no comment. Narration that shares no
+identifiers with its code, and a comment that carries a fact nobody needs,
+still need a reader.
+
 ## Red flags
 
 - The comment restates the line under it in prose.

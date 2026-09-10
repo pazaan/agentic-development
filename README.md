@@ -49,13 +49,14 @@ observed to skip once they decay out of attention:
 
 - `userpromptsubmit-skill-nudge.sh` (`UserPromptSubmit`) — soft nudge. Injects a `<system-reminder>` naming the skill when the prompt looks skill-shaped and that skill hasn't been invoked in the last `$SKILL_NUDGE_RECENCY` transcript entries (default 50).
 - `pretooluse-skill-gate.sh` (`PreToolUse`, matcher `Bash`) — hard gate. Exits `2` on PR-write / review-write commands when the required skill was never invoked this session. Exempts `--help`, `-h`, `--dry-run`.
+- `posttooluse-comment-check.sh` (`PostToolUse`, matcher `Edit|Write`) — judges the comment lines an edit *added* against `no-bullshit-comments`; exits `0` without a word when the edit added none, so code-only edits are untouched. Off via `$COMMENT_CHECK_DISABLE`.
 
 Stop hooks:
 
 - `task-completed-checklist.sh` (`Stop`) — checks last assistant message against `$PROJECT_PRECOMMIT_CHECKLIST`.
 - `task-completed-caveman-bleed.sh` (`Stop`) — flags caveman-mode bleed in artifacts, over `$CAVEMAN_BLEED_THRESHOLD` (default 40).
 
-All four no-op (exit 0) when `jq` is missing, `transcript_path` is absent,
+All five no-op (exit 0) when `jq` is missing, `transcript_path` is absent,
 or the relevant env var / file is unset. See `hooks/README.md` for the
 full gate/nudge trigger table and how to add a rule.
 

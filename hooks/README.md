@@ -12,6 +12,7 @@ and runs its check against the JSONL transcript.
 |-------------------------------------|---------------------|--------------------------------------|----------------------------------------|
 | `userpromptsubmit-skill-nudge.sh`   | `UserPromptSubmit`  | `prompt`, `transcript_path`          | Soft nudge — injects skill names when the user's prompt looks skill-shaped and the skill is stale. |
 | `pretooluse-skill-gate.sh`          | `PreToolUse`        | `tool_name`, `tool_input.command`    | Hard gate — blocks PR-write / review-write commands until the required skill has been invoked. |
+| `posttooluse-comment-check.sh`      | `PostToolUse`       | `tool_input.{file_path,old_string,new_string,content}` | Judges the comment lines an edit added; silent on code-only edits. |
 | `task-completed-checklist.sh`       | `Stop`              | `$PROJECT_PRECOMMIT_CHECKLIST`       | No-op when env unset or file missing.  |
 | `task-completed-caveman-bleed.sh`   | `Stop`              | `$CAVEMAN_BLEED_THRESHOLD` (def. 40) | Heuristic; tune per project.           |
 
@@ -67,6 +68,41 @@ The nudge tolerates over-triggering (cost = one extra system reminder);
 the gate does not (cost = a blocked tool call), so nudge patterns can be
 looser than gate patterns.
 
+### Comment check (`posttooluse-comment-check.sh`)
+
+Fires after every `Edit` / `Write`. Two stages, and the first one is what
+keeps it quiet: extract the comment lines the edit **added** (for `Edit`,
+`new_string` minus `old_string`), and exit 0 when there are none. A
+code-only edit never reaches the second stage.
+
+Stage two judges that comment text against
+`agentic-development:no-bullshit-comments`:
+
+| Check | Fires on |
+|-------|----------|
+| Unresolvable reference | `AC-<n>`, "acceptance criteria", "in this PR", "on this branch", `~/.claude/{specs,plans}`, dated spec/plan paths |
+| Self-defending phrasing | "belt-and-braces", "requirement, not", "not thoroughness" |
+| Spelled count | determiner + `two`…`ten` — a count that goes stale silently where a symbol would not |
+| Section number as content | `§<n>` in a comment carrying no standing sentence of its own |
+| Narration | comment words mostly echo the identifiers of the code line below, and no rationale word ("because", "otherwise", "must", …) appears |
+
+Contiguous comment lines are judged as one comment, so a rationale on the
+third line answers the first. Prose files (`.md`, `.txt`) are skipped
+entirely — a Markdown document is all comment. Language markers come from
+the file extension; an unknown extension exits 0.
+
+When nothing is flagged but comments were added, the hook surfaces the
+rules once per `$COMMENT_CHECK_RECENCY` transcript entries (default 100),
+so the reminder lands while comments are being written rather than at
+branch end.
+
+The scope is the comment text and nothing else. Adjacent code is read as
+the reference the comment is measured against and is never judged; the
+remedy the agent is handed is always "rewrite or delete the comment".
+Comments already in the file are out of scope.
+
+`$COMMENT_CHECK_DISABLE` (any non-empty value) turns it off.
+
 ### Exit codes
 
 - `0` — pass; event proceeds.
@@ -83,6 +119,8 @@ Hooks no-op (exit 0) when:
 - (`pretooluse-skill-gate`) the command doesn't match any gated pattern.
 - (`userpromptsubmit-skill-nudge`) the prompt doesn't match any trigger
   OR the matched skill was already invoked within the recency window.
+- (`posttooluse-comment-check`) the edit added no comment lines, the file
+  extension has no known comment syntax, or `$COMMENT_CHECK_DISABLE` is set.
 
 ## Dropped hooks (was v0.3.1, removed v0.3.2)
 

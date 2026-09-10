@@ -34,6 +34,19 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/posttooluse-comment-check.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking comments added by this edit..."
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
