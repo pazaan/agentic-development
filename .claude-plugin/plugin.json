@@ -1,6 +1,6 @@
 {
   "name": "agentic-development",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Personal Claude Code extensions \u2014 skills, commands, agents, and hooks.",
   "author": {
     "name": "Lennart Goedhart",
@@ -30,6 +30,19 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pretooluse-skill-gate.sh\"",
             "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/posttooluse-comment-check.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking comments added by this edit..."
           }
         ]
       }

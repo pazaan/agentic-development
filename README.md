@@ -35,6 +35,7 @@ Lead presents the plan; nothing spawns until you approve.
 - **team-handoff** — Lead's binding load and spawn/message/plan-storage primitives.
 - **ticket-as-contract** — Plan-note template enforcing AC traceability; Reviewer adjudication routing.
 - **pre-commit-grep** — Coder's existing-pattern reuse + third-party-claim verification checks.
+- **no-bullshit-comments** — a comment earns its place only by saying what the code cannot; kills line-narration, self-defending phrasing, references a reader cannot resolve from the repo, and counts that go stale where a symbol name belongs.
 - **pr-body-protocol** — PR description shape + per-stack-tool composition command + commit-body KEEP/DROP rules.
 - **tester-browser-sweep** — Tester's functional matrix + axe a11y + console/network capture via the Claude Code Chrome extension (`claude-in-chrome` MCP).
 
@@ -48,13 +49,14 @@ observed to skip once they decay out of attention:
 
 - `userpromptsubmit-skill-nudge.sh` (`UserPromptSubmit`) — soft nudge. Injects a `<system-reminder>` naming the skill when the prompt looks skill-shaped and that skill hasn't been invoked in the last `$SKILL_NUDGE_RECENCY` transcript entries (default 50).
 - `pretooluse-skill-gate.sh` (`PreToolUse`, matcher `Bash`) — hard gate. Exits `2` on PR-write / review-write commands when the required skill was never invoked this session. Exempts `--help`, `-h`, `--dry-run`.
+- `posttooluse-comment-check.sh` (`PostToolUse`, matcher `Edit|Write`) — judges the comment lines an edit *added* against `no-bullshit-comments`; exits `0` without a word when the edit added none, so code-only edits are untouched. Off via `$COMMENT_CHECK_DISABLE`.
 
 Stop hooks:
 
 - `task-completed-checklist.sh` (`Stop`) — checks last assistant message against `$PROJECT_PRECOMMIT_CHECKLIST`.
 - `task-completed-caveman-bleed.sh` (`Stop`) — flags caveman-mode bleed in artifacts, over `$CAVEMAN_BLEED_THRESHOLD` (default 40).
 
-All four no-op (exit 0) when `jq` is missing, `transcript_path` is absent,
+All five no-op (exit 0) when `jq` is missing, `transcript_path` is absent,
 or the relevant env var / file is unset. See `hooks/README.md` for the
 full gate/nudge trigger table and how to add a rule.
 

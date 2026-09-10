@@ -144,6 +144,21 @@ session. Teammates go idle after each turn — that's normal.
 chrome tools, say so to the user rather than substituting a screenshot-free
 "PASS" — an a11y sweep that never opened a browser is not a sweep.
 
+**A spawned teammate has no `Skill` tool.** A rule that lives only in a
+skill file reaches Coder as brief text or not at all. Comment discipline
+is the one that decays fastest under implementation pressure, so the
+Coder brief carries it inline:
+
+> Comments: a comment earns its place only by carrying rationale, a
+> hazard, a non-obvious constraint, a decision plus its reason, or a
+> measurement the reader cannot re-derive. Do not narrate the line below
+> it. Every reference must resolve from inside the repo — no
+> acceptance-criterion numbers, no plan or spec paths outside it, no "in
+> this PR". Name a symbol where you would otherwise write a count.
+
+`hooks/posttooluse-comment-check.sh` catches the mechanical half of that
+at write time. The brief covers narration, which no regex sees.
+
 ### Ephemeral specialists
 
 Same `Agent` tool, **without `name`**. Single-shot, no follow-up. Their

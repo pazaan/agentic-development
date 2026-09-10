@@ -13,6 +13,7 @@ this plugin).
 | `agentic-development:stacked-prs`              | raw git rebase / push --force / amend / merge; any stack operation | Coder git-spice safety block   | user-controlled  | (this repo) |
 | `agentic-development:tester-browser-sweep`     | Tester loop                                | Tester axe/console/functional inline body   | user-controlled  | (this repo) |
 | `agentic-development:pre-commit-grep`          | Coder pre-commit                           | Coder existing-pattern + third-party verify | user-controlled  | (this repo) |
+| `agentic-development:no-bullshit-comments`     | comment written or edited                   | (none — new capability)                     | user-controlled  | (this repo) |
 | `agentic-development:ticket-as-contract`       | Lead plan or Reviewer adjudication         | Lead Ticket Criteria Mapping + Build Order  | user-controlled  | (this repo) |
 | `agentic-development:team-handoff`             | Lead first-action / spawn / message peers / plan storage | Lead spawn + binding load + plan storage | user-controlled  | (this repo) |
 | `agentic-development:pr-body-protocol`         | first push / PR-body curation / commit body audit | Lead PR body + Coder commit body            | user-controlled  | (this repo) |
