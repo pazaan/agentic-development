@@ -1,5 +1,5 @@
 ---
-description: Start an agentic workflow on <task>. Activates Lead behavior, loads bindings, fetches ticket if argument is an ID, then routes to either a direct plan or iterative-development depending on scope.
+description: Start an agentic workflow on <task>. Activates Lead behavior, loads bindings, fetches ticket if argument is an ID, then drafts a plan note — or spawns an explorer when the spec is a spike.
 ---
 
 Argument: `$ARGUMENTS`
@@ -58,50 +58,7 @@ If `SPEC` contains any of: `spike`, `explore`, `investigate`,
    `subagent_type: explorer`, pass `SPEC` as prompt. Report findings.
    Done. Do not draft a plan; do not spawn persistent teammates.
 
-### 4b. Big-spec → `iterative-development`
-
-Route to `iterative-development:iterative-development` if **any** of:
-
-- `--iterative` appears anywhere in `$ARGUMENTS` (explicit user override).
-- `SPEC` mentions two or more distinct subsystems. Subsystem keywords:
-  `frontend`, `UI`, `backend`, `API`, `database`, `DB`, `migration`,
-  `schema`, `mobile`, `worker`, `cron`, `infrastructure`, `auth`,
-  `billing`. Two or more from disjoint pairs count.
-- `SPEC` describes multiple epics, milestones, phases, or releases.
-- `SPEC`'s explicit AC list is missing or vague (no enumerable
-  bullets, or bullets read as goals rather than verifiable criteria).
-- `SPEC` length exceeds **800 words** OR contains **more than 10** AC
-  bullets.
-
-When routing here:
-- Invoke the `iterative-development:iterative-development` skill.
-- Pass `SPEC` as the spec input.
-- That skill will run `extracting-requirements` → `scoping-the-simplest-core`
-  → present a roadmap and first iteration.
-- Stop and present the first iteration plan to the user before step 6.
-
-### 4c. Borderline / contradictory signals → ASK
-
-Before defaulting to a small-spec plan, sanity-check the signals.
-If **any** of the below hold, do **not** auto-route. Stop and ask the
-user via `AskUserQuestion` with two options: "Direct plan (small spec)"
-vs "iterative-development (big/ambiguous spec)". Quote the ambiguity in
-the question prompt so the user has the same view of it.
-
-- Exactly one subsystem keyword matched, but `SPEC` is between 500 and
-  800 words.
-- AC list is present but mixes verifiable criteria with goal-shaped
-  statements (e.g., "users can …" alongside "system is fast").
-- Phase / milestone language present but only one subsystem.
-- `SPEC` describes a single subsystem with 8-10 ACs (right at the
-  boundary).
-
-Wait for the answer. Then continue at the chosen route.
-
-### 4d. Small spec → direct plan
-
-Otherwise (single subsystem, ≤ 8 concrete ACs, ≤ 500 words, no
-phase/milestone framing):
+### 4b. Anything else → direct plan
 
 - Invoke `agentic-development:ticket-as-contract`.
 - Draft a plan note containing `## Ticket Criteria Mapping` (every AC
@@ -116,11 +73,19 @@ phase/milestone framing):
   needs a migration or an edge function, the ticket is not `class: ui` —
   re-class it, or split it, before spawning anyone.
 
+If `SPEC` is too large to hold as one contract — multiple epics,
+milestones or releases, two or more disjoint subsystems, or an AC list
+that is missing or reads as goals rather than verifiable criteria — stop
+and ask the user via `AskUserQuestion` whether to split it into separate
+tickets or to proceed on the whole thing as one plan. Quote the part that
+triggered the question. Dispatch `pm-reviewer` in step 6 when the ACs
+stay ambiguous.
+
 ## 5. Present the plan
 
-Whichever route ran in step 4 (4b or 4c), present its output to the user
-verbatim and wait for explicit approval. Do not spawn any persistent
-teammate before that approval lands.
+Present the plan note to the user verbatim and wait for explicit
+approval. Do not spawn any persistent teammate before that approval
+lands.
 
 ## 6. Execute on approval
 

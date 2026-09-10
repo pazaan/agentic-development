@@ -1,14 +1,13 @@
 {
   "name": "agentic-development",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Personal Claude Code extensions \u2014 skills, commands, agents, and hooks.",
   "author": {
     "name": "Lennart Goedhart",
     "email": "lennart@omnibase.com.au"
   },
   "dependencies": [
-    "superpowers@claude-plugins-official",
-    "iterative-development@prime-radiant-marketplace"
+    "superpowers@claude-plugins-official"
   ],
   "hooks": {
     "UserPromptSubmit": [
