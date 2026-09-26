@@ -14,9 +14,9 @@
 # against; it is never judged.
 #
 # Runs after the write, so nothing is blocked: exit 2 surfaces stderr to
-# the agent, which can revise in place. Exit 2 means a finding and nothing
-# else — an edit whose comments all pass is silent, so the one channel the
-# agent can see is never spent on a reminder it cannot act on.
+# the agent, which can revise in place. No other path may exit 2 — a
+# reminder once shared this channel and had to be removed, for the reason
+# in hooks/README.md.
 #
 # Tuning:
 #   $COMMENT_CHECK_DISABLE   — any non-empty value: no-op
@@ -237,5 +237,4 @@ if [ -n "$FINDINGS" ]; then
   } >&2
   exit 2
 fi
-
 exit 0
