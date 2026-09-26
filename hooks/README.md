@@ -91,10 +91,12 @@ third line answers the first. Prose files (`.md`, `.txt`) are skipped
 entirely — a Markdown document is all comment. Language markers come from
 the file extension; an unknown extension exits 0.
 
-When nothing is flagged but comments were added, the hook surfaces the
-rules once per `$COMMENT_CHECK_RECENCY` transcript entries (default 100),
-so the reminder lands while comments are being written rather than at
-branch end.
+When nothing is flagged the hook is silent. Exit 2 is the only channel the
+agent reads, so spending it on a compliant edit trains the agent to read
+past the findings too: a house style that mandates a file-level doc block
+makes "comments were added" true of every authored file, and a reminder
+keyed on that fires on every edit while carrying no signal. Surfacing the
+skill is `userpromptsubmit-skill-nudge.sh`'s job, which never blocks.
 
 The scope is the comment text and nothing else. Adjacent code is read as
 the reference the comment is measured against and is never judged; the
