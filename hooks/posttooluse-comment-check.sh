@@ -14,11 +14,12 @@
 # against; it is never judged.
 #
 # Runs after the write, so nothing is blocked: exit 2 surfaces stderr to
-# the agent, which can revise in place.
+# the agent, which can revise in place. No other path may exit 2 — a
+# reminder once shared this channel and had to be removed, for the reason
+# in hooks/README.md.
 #
 # Tuning:
 #   $COMMENT_CHECK_DISABLE   — any non-empty value: no-op
-#   $COMMENT_CHECK_RECENCY   — entries to look back for the skill (default 100)
 #
 # Fails open on infrastructure problems (no jq, no file_path, unknown
 # language).
@@ -236,36 +237,4 @@ if [ -n "$FINDINGS" ]; then
   } >&2
   exit 2
 fi
-
-# Comments added, none flagged: surface the rules once per window, at the
-# moment the agent is actually writing comments.
-TRANSCRIPT=$(echo "$EVENT" | jq -r '.transcript_path // ""' 2>/dev/null || true)
-[ -z "$TRANSCRIPT" ] && exit 0
-[ ! -f "$TRANSCRIPT" ] && exit 0
-
-RECENCY="${COMMENT_CHECK_RECENCY:-100}"
-HITS=$(jq -rs --argjson n "$RECENCY" '
-  .[(-1 * $n):]
-  | [ .[]
-      | select(.type=="assistant")
-      | .message.content // []
-      | (if type=="array" then . else [] end)
-      | .[]
-      | select(.type=="tool_use" and .name=="Skill")
-      | .input.skill
-      | select(. == "agentic-development:no-bullshit-comments")
-    ] | length
-' "$TRANSCRIPT" 2>/dev/null || echo 0)
-
-[ "${HITS:-0}" -gt 0 ] && exit 0
-
-{
-  echo "no-bullshit-comments: this edit added comments and the skill has not"
-  echo "been invoked in the last ${RECENCY} transcript entries. A comment earns"
-  echo "its place only by carrying rationale, a hazard, a non-obvious"
-  echo "constraint, a decision plus its reason, or a measurement the reader"
-  echo "cannot re-derive. Every reference in it must resolve from inside the"
-  echo "repo. Check the comments you just wrote against"
-  echo "agentic-development:no-bullshit-comments; leave the code alone."
-} >&2
-exit 2
+exit 0

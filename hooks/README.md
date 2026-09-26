@@ -3,8 +3,9 @@
 These hooks are declared in `.claude-plugin/plugin.json` and auto-wired by
 `/plugin install`. No manual `~/.claude/settings.json` edit needed.
 
-Each hook reads its event JSON from stdin, resolves `transcript_path`,
-and runs its check against the JSONL transcript.
+Each hook reads its event JSON from stdin; the transcript-backed ones
+resolve `transcript_path` and run their check against the JSONL. The
+comment check reads only the event.
 
 ## Kept hooks
 
@@ -12,7 +13,7 @@ and runs its check against the JSONL transcript.
 |-------------------------------------|---------------------|--------------------------------------|----------------------------------------|
 | `userpromptsubmit-skill-nudge.sh`   | `UserPromptSubmit`  | `prompt`, `transcript_path`          | Soft nudge — injects skill names when the user's prompt looks skill-shaped and the skill is stale. |
 | `pretooluse-skill-gate.sh`          | `PreToolUse`        | `tool_name`, `tool_input.command`    | Hard gate — blocks PR-write / review-write commands until the required skill has been invoked. |
-| `posttooluse-comment-check.sh`      | `PostToolUse`       | `tool_input.{file_path,old_string,new_string,content}` | Judges the comment lines an edit added; silent on code-only edits. |
+| `posttooluse-comment-check.sh`      | `PostToolUse`       | `tool_input.{file_path,old_string,new_string,content}` | Judges the comment lines an edit added; silent unless it has a finding. |
 | `task-completed-checklist.sh`       | `Stop`              | `$PROJECT_PRECOMMIT_CHECKLIST`       | No-op when env unset or file missing.  |
 | `task-completed-caveman-bleed.sh`   | `Stop`              | `$CAVEMAN_BLEED_THRESHOLD` (def. 40) | Heuristic; tune per project.           |
 
@@ -91,10 +92,14 @@ third line answers the first. Prose files (`.md`, `.txt`) are skipped
 entirely — a Markdown document is all comment. Language markers come from
 the file extension; an unknown extension exits 0.
 
-When nothing is flagged but comments were added, the hook surfaces the
-rules once per `$COMMENT_CHECK_RECENCY` transcript entries (default 100),
-so the reminder lands while comments are being written rather than at
-branch end.
+When nothing is flagged the hook is silent. The reminder that used to sit
+here fired on any edit that added a line to a recognised source file — it
+never checked whether a comment was among them — spending exit 2, the
+agent's only channel, on edits with nothing wrong, and slurping the whole
+JSONL transcript per edit to date the last skill invocation (10 ms at 1 MB,
+330 ms at 52 MB, against this hook's 5 s timeout). Nothing else surfaces
+the skill: the nudge has no arm for it, and a spawned role cannot invoke
+skills at all (`SKILLS.md`), so roles carry it from `ROLES.md`.
 
 The scope is the comment text and nothing else. Adjacent code is read as
 the reference the comment is measured against and is never judged; the
@@ -119,8 +124,9 @@ Hooks no-op (exit 0) when:
 - (`pretooluse-skill-gate`) the command doesn't match any gated pattern.
 - (`userpromptsubmit-skill-nudge`) the prompt doesn't match any trigger
   OR the matched skill was already invoked within the recency window.
-- (`posttooluse-comment-check`) the edit added no comment lines, the file
-  extension has no known comment syntax, or `$COMMENT_CHECK_DISABLE` is set.
+- (`posttooluse-comment-check`) the edit added no lines, the file extension
+  has no known comment syntax, the added lines carry no comment, every
+  comment among them passes, or `$COMMENT_CHECK_DISABLE` is set.
 
 ## Dropped hooks (was v0.3.1, removed v0.3.2)
 

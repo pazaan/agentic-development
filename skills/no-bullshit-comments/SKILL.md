@@ -101,7 +101,7 @@ hardcoded count both can.
 `Write` added and reports the mechanical failures — unresolvable
 references, self-defending phrasing, spelled counts, a section number
 carrying content, and comment text that echoes the identifiers below it.
-It says nothing on an edit that added no comment. Narration that shares no
+It says nothing unless it has a finding. Narration that shares no
 identifiers with its code, and a comment that carries a fact nobody needs,
 still need a reader.
 
