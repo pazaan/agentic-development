@@ -37,7 +37,7 @@ See `agentic-development:pr-body-protocol`. Lead's role: enforce shape pre-push,
 
 ## Skills loaded
 
-`superpowers:brainstorming`, `superpowers:writing-plans`, `superpowers:receiving-code-review`, `agentic-development:ticket-as-contract`, `agentic-development:team-handoff`, `agentic-development:pr-body-protocol`.
+`gangsta:receiving-orders`, `agentic-development:ticket-as-contract`, `agentic-development:team-handoff`, `agentic-development:pr-body-protocol`.
 
 ## Spawn
 
@@ -119,7 +119,7 @@ Before authorizing a push (gated by `$PROJECT_PUSH_ALLOWED`):
 - Plan-stated literals match committed code: status codes, magic numbers, enum picks, schema column names, file paths. Skim plan note + PR body + relevant diff hunks; flag divergence.
 - PR body claims match diff: "extends X" → diff touches X; "adds Y test" → Y assertion present.
 - Source-of-truth: plan note. If plan + code diverge, plan was wrong OR code was wrong — adjudicate before push, don't paper over.
-- **External-reviewer variance pass.** Invoke `agentic-development:reviewing-code` (or the platform's `/reviewing-code` equivalent) once over the stack tip diff. This dispatches a `general-purpose` subagent against the superpowers code-reviewer template, which has no plan-context and re-verifies every claim from scratch. Surface only verified findings (the skill's own verification gate filters hallucinations). Apply them via the same Coder amend → Reviewer pre-commit gate flow used during the build.
+- **External-reviewer variance pass.** Invoke `agentic-development:reviewing-code` (or the platform's `/reviewing-code` equivalent) once over the stack tip diff. This dispatches the `the-inspector` subagent against the gangsta audit template, which has no plan-context and re-verifies every claim from scratch. Surface only verified findings (the skill's own verification gate filters hallucinations). Apply them via the same Coder amend → Reviewer pre-commit gate flow used during the build.
 
 Rationale: in-team Reviewer's five-pass operates on the diff in isolation but inherits chain-of-trust from upstream Coder (e.g. "Coder verified library value X at file:line Y" — Reviewer treats the cited verification as evidence rather than re-running it). External reviewer re-derives every claim with no trust chain, catching numerical-rounding and cross-component-consistency misses that contract-aware review trusts away. One extra pass per stack hits the natural variance ceiling cheaply; further passes harvest diminishing returns.
 

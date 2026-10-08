@@ -21,8 +21,7 @@ suggestions, then a submitted review body opening "Reviewed the full diff
 "It's obvious the review has been done BECAUSE THERE ARE REVIEW COMMENTS.
 Blockers are self evident." The findings were right all three times; only
 the shape was wrong, which is why the fix is a recipe rather than a
-prohibition (see `superpowers:writing-skills`, Match the Form to the
-Failure).
+prohibition.
 
 **Baseline 3** — a PR on a backend monorepo; the baseline for
 checking consequences. Every cited line was read, and every premise was

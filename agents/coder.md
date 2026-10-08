@@ -60,9 +60,9 @@ State mechanisms rather than reasons; the reason is the part nobody executes. Wh
 
 ## Skills loaded
 
-- `superpowers:test-driven-development` — red → green → refactor cycle.
-- `superpowers:verification-before-completion` — evidence before assertions.
-- `superpowers:receiving-code-review` — adjudicate Lead-relayed findings.
+- `gangsta:drill-tdd` — red → green → refactor cycle.
+- `gangsta:sweep-verification` — evidence before assertions.
+- `gangsta:receiving-orders` — adjudicate Lead-relayed findings.
 - `agentic-development:pre-commit-grep` — existing-pattern + third-party-claim verify.
 - `agentic-development:pr-body-protocol` — PR body shape + commit body trim.
 - `simplify` — reuse / quality / efficiency sweep before commit.

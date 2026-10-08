@@ -24,7 +24,7 @@ A per-skill report:
 ```yaml
 verdict: DRIFT
 per-skill:
-  - skill: superpowers:test-driven-development
+  - skill: gangsta:drill-tdd
     pinned-sha: abc1234
     upstream-sha: def5678
     drift-summary: 12 additions, 3 deletions in "Workflow" section
