@@ -21,7 +21,7 @@ model: claude-sonnet-4-6
 
 ## Skills loaded
 
-- `superpowers:verification-before-completion` — evidence before assertions.
+- `gangsta:sweep-verification` — evidence before assertions.
 
 ## Test surface
 

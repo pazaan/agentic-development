@@ -1,14 +1,14 @@
 ---
 name: reviewing-code
-description: Use whenever a code review is requested on a PR, branch, diff, or completed work. Symptoms include being about to dispatch a reviewer subagent or about to invoke requesting-code-review directly. This is the front door for all review-dispatch tasks.
+description: Use whenever a code review is requested on a PR, branch, diff, or completed work. Symptoms include being about to dispatch a reviewer subagent or about to invoke audit-review directly. This is the front door for all review-dispatch tasks.
 ---
 
 # Reviewing Code
 
 ## Overview
 
-Composes `superpowers:requesting-code-review` (dispatch) with
-`superpowers:receiving-code-review` (verification). The reviewer subagent
+Composes `gangsta:audit-review` (dispatch) with
+`gangsta:receiving-orders` (verification). The reviewer subagent
 is an EXTERNAL reviewer; its output is suggestions to evaluate, not
 orders to relay.
 
@@ -24,9 +24,9 @@ string it pasted. Assume that is where your errors are.
 
 ## Workflow
 
-1. **Dispatch the reviewer.** Follow `superpowers:requesting-code-review`'s
+1. **Dispatch the reviewer.** Follow `gangsta:audit-review`'s
    instructions verbatim — get the git SHAs, fill the template at
-   `code-reviewer.md`, dispatch a `general-purpose` subagent.
+   `the-inspector-prompt.md`, dispatch the `the-inspector` subagent.
 
    Fill `{PLAN_OR_REQUIREMENTS}` with what the PR says it is for, and
    stop. Adding your own suspicions ("check whether this silently breaks
@@ -36,7 +36,7 @@ string it pasted. Assume that is where your errors are.
    come to verify it.
 
 2. **Receive its output as external feedback.** Apply
-   `superpowers:receiving-code-review`'s External-Reviewer checklist to
+   `gangsta:receiving-orders`' From External Sources checklist to
    every Critical/Important finding before relaying:
    - Open the cited file:line. Read it. That settles the premise — the
      reviewer quoted real code — and nothing else.

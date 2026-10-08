@@ -28,7 +28,7 @@ Lead presents the plan; nothing spawns until you approve.
 ### Skills
 
 - **caveman-micro** — lightweight token-efficient response mode; drops filler/articles/pleasantries while keeping technical substance exact.
-- **reviewing-code** — front door for code review dispatch; composes `superpowers:requesting-code-review` with `superpowers:receiving-code-review` so no finding leaves the workflow without its premise, consequence and remedy verified against the cited file:line. Baselines load on demand from `references/baselines.md`.
+- **reviewing-code** — front door for code review dispatch; composes `gangsta:audit-review` with `gangsta:receiving-orders` so no finding leaves the workflow without its premise, consequence and remedy verified against the cited file:line. Baselines load on demand from `references/baselines.md`.
 - **review-rehearsal** — request-only dry run of a *written review* before it is posted: a junior-persona agent applies the review on a throwaway branch, a senior-persona agent reviews the result, and the output is a corrected review. Costs two subagents and a worktree.
 - **stacked-prs** — detects which stack tool owns the repo (git-spice, GitHub Stacks, or plain PRs) and routes raw-git operations (`rebase`, `push --force`, `commit --amend`, `merge main`) to that tool's equivalent so stack tracking doesn't silently break.
 - **team-handoff** — Lead's binding load and spawn/message/plan-storage primitives.
@@ -39,7 +39,7 @@ Lead presents the plan; nothing spawns until you approve.
 - **tester-browser-sweep** — Tester's functional matrix + axe a11y + console/network capture via the Claude Code Chrome extension (`claude-in-chrome` MCP).
 
 `SKILLS.md` maps every skill the role set references — including the
-upstream ones from `superpowers` — to its trigger and drift owner.
+upstream ones from `gangsta` — to its trigger and drift owner.
 
 ### Hooks (auto-wired on install via `plugin.json`)
 

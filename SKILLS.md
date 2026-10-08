@@ -17,11 +17,10 @@ this plugin).
 | `agentic-development:ticket-as-contract`       | Lead plan or Reviewer adjudication         | Lead Ticket Criteria Mapping + Build Order  | user-controlled  | (this repo) |
 | `agentic-development:team-handoff`             | Lead first-action / spawn / message peers / plan storage | Lead spawn + binding load + plan storage | user-controlled  | (this repo) |
 | `agentic-development:pr-body-protocol`         | first push / PR-body curation / commit body audit | Lead PR body + Coder commit body            | user-controlled  | (this repo) |
-| `superpowers:brainstorming`                    | new feature / design exploration           | Lead brainstorming block                    | upstream         | TODO pin    |
-| `superpowers:writing-plans`                    | plan needed                                | Lead plan-structure block                   | upstream         | TODO pin    |
-| `superpowers:receiving-code-review`            | reviewer / tester findings inbound         | Lead adjudication block                     | upstream         | TODO pin    |
-| `superpowers:test-driven-development`          | Coder writes implementation                | Coder TDD block                             | upstream         | TODO pin    |
-| `superpowers:verification-before-completion`   | Coder claims done                          | Coder verification block                    | upstream         | TODO pin    |
+| `gangsta:audit-review`                         | reviewer dispatch inside reviewing-code    | reviewing-code dispatch step                | upstream         | TODO pin    |
+| `gangsta:receiving-orders`                     | reviewer / tester findings inbound         | Lead adjudication block                     | upstream         | TODO pin    |
+| `gangsta:drill-tdd`                            | Coder writes implementation                | Coder TDD block                             | upstream         | TODO pin    |
+| `gangsta:sweep-verification`                   | Coder claims done                          | Coder verification block                    | upstream         | TODO pin    |
 | `simplify`                                     | Coder finishes change                      | Coder reuse / simplify block                | upstream         | TODO pin    |
 
 ## Drift policy

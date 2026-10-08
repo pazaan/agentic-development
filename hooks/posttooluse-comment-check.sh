@@ -164,7 +164,7 @@ function judge(body, code, label,   probe, found, hay, n, words, kept, echoed, r
     found = "cites an acceptance criterion — task reasoning belongs in the PR body"
   else if (probe ~ /(in|for) this (pr|pull request|branch|change)/ || probe ~ /on this branch/ || probe ~ /as (discussed|agreed|decided) (above|earlier|elsewhere)/)
     found = "refers to the PR or branch — meaningless once merged"
-  else if (probe ~ /~\/\.claude\/(specs|plans)/ || probe ~ /docs\/superpowers/ || probe ~ /(specs?|plans?)\/[0-9]{4}-[0-9]{2}-[0-9]{2}/)
+  else if (probe ~ /~\/\.claude\/(specs|plans|gangsta)/ || probe ~ /docs\/superpowers/ || probe ~ /(specs?|plans?)\/[0-9]{4}-[0-9]{2}-[0-9]{2}/)
     found = "points at a path outside the repo — the reader cannot resolve it"
   else if (probe ~ /belt[ -]and[ -]braces/ || probe ~ /requirement,? not/ || probe ~ /not (mere|just )?(thoroughness|paranoia|defensive)/ || probe ~ /to be clear,? (this is )?not/)
     found = "argues with an imagined critic — state the fact once"
