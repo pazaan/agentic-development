@@ -1,6 +1,6 @@
 ---
 name: stacked-prs
-description: Use before any git operation that rewrites history or changes branch parentage (`git rebase`, `git push --force`, `git commit --amend`, `git merge main`), and whenever the work involves stacked pull requests. Triggers on "stack", "restack", "stacked PR", "git-spice", "gh stack", `gs`. Resolves which stack tool the repo actually uses — git-spice, GitHub Stacks, or neither — and routes to that tool's equivalent commands.
+description: Use before rebase, force-push, amend or merging main, and for any stacked-PR work (git-spice, gh stack, gs); routes the operation to the stack tool the repo uses.
 ---
 
 # Stacked PRs
@@ -172,12 +172,9 @@ Written for git-spice; under `gh stack` the equivalent steps are
   tool depending on whose alias is loaded.
 - Assume the command syntax you remember is correct. If you're not
   certain, fetch the tool's docs before running it.
-- Trust a `PROJECT_PR_PUSH_CMD` override without verifying the command
-  exists. User wrappers (e.g. `gss`) live in interactive shell config and
-  won't resolve in a non-interactive harness.
-- Treat a configured push command as evidence of which stack tool the repo
-  uses. It is a stale cache of a decision Step 0 re-derives correctly every
-  time.
+- Run a shell alias or function such as `gss`. Aliases live in interactive
+  shell config and are invisible to a non-interactive shell, so use
+  `git-spice stack submit`.
 
 **Always:**
 - Prefer the canonical long form (`git-spice branch submit`,
@@ -186,7 +183,7 @@ Written for git-spice; under `gh stack` the equivalent steps are
 - After any restack, confirm the stack shape before pushing —
   `git-spice log short` or `gh stack view`.
 - After `git-spice commit amend`, **verify the tree actually changed**
-  before claiming success — Coder agents have been observed amending
+  before claiming success — agents have been observed amending
   with nothing staged (SHA rebake, identical tree):
 
     ```bash

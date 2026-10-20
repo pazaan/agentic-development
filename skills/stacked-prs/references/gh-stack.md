@@ -47,8 +47,7 @@ and edge cases. What follows is only what you need to route correctly.
   locked by another process.
 - **`sync` vs `submit`.** `sync` never opens PRs — it only rebases,
   pushes, and links PRs that already exist. Use `submit` to create them.
-- **`sync` on a diverged stack.** In a non-interactive shell (i.e. any
-  harness Bash call) a divergence aborts the sync with exit **success**
+- **`sync` on a diverged stack.** In a non-interactive shell a divergence aborts the sync with exit **success**
   and pushes nothing. Check `gh stack view` after, don't assume it
   worked.
 - **Don't set a `gs` alias.** `gh stack alias` defaults to `gs`, which

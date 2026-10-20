@@ -26,17 +26,8 @@ command -v git-spice \
 If it's off-PATH, invoke via full path for the rest of the session —
 don't mutate PATH at the shell level.
 
-**User-defined wrappers** (functions or aliases in `~/.bashrc` /
-`~/.zshrc`, e.g. `gss = git-spice stack submit + cancellation cleanup`)
-are **not visible to non-interactive harness shells**. If an override like
-`PROJECT_PR_PUSH_CMD: gss` doesn't resolve via `command -v`, try
-`bash -ilc 'command -v <name>'` to discover whether it's an alias. If
-still nothing, fall back to the canonical `git-spice stack submit` and
-tell the user their override is unreachable from a harness shell.
-
-Note that `PROJECT_PR_PUSH_CMD` is an override, not the normal source of
-the push command. Step 0 above is. A repo with no override is the expected
-case, not a misconfiguration.
+Shell aliases and functions (e.g. `gss` in `~/.zshrc`) are invisible to a
+non-interactive shell, so use `git-spice stack submit`.
 
 ### Red Flags — raw git ops that break git-spice stacks
 
