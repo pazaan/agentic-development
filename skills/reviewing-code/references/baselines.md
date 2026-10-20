@@ -1,6 +1,6 @@
 # Real-World Baseline
 
-Six runs of `reviewing-code` on real pull requests, and what each one
+Runs of `reviewing-code` on real pull requests, and what each one
 cost before the rule that now prevents it existed. Load this when a rule
 in the skill looks arbitrary, when deciding whether to drop a finding you
 cannot quite justify, or when calibrating how much verification a review

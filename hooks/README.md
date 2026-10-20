@@ -7,11 +7,11 @@ Each hook reads its event JSON from stdin; the transcript-backed ones
 resolve `transcript_path` and run their check against the JSONL. The
 comment check reads only the event.
 
-## Kept hooks
+## Hooks
 
 | Hook                                | Event               | Reads                                | Notes                                  |
 |-------------------------------------|---------------------|--------------------------------------|----------------------------------------|
-| `userpromptsubmit-skill-nudge.sh`   | `UserPromptSubmit`  | `prompt`, `transcript_path`          | Soft nudge — injects skill names when the user's prompt looks skill-shaped and the skill is stale. |
+| `userpromptsubmit-skill-nudge.sh`   | `UserPromptSubmit`  | `prompt`, `transcript_path`          | Soft nudge — injects skill names when the user's prompt is a skill-shaped request and the skill is stale. |
 | `pretooluse-skill-gate.sh`          | `PreToolUse`        | `tool_name`, `tool_input.command`    | Hard gate — blocks PR-write / review-write commands until the required skill has been invoked. |
 | `posttooluse-comment-check.sh`      | `PostToolUse`       | `tool_input.{file_path,old_string,new_string,content}` | Judges the comment lines an edit added; silent unless it has a finding. |
 | `task-completed-caveman-bleed.sh`   | `Stop`              | `$CAVEMAN_BLEED_THRESHOLD` (def. 40) | Heuristic; tune per project.           |
@@ -24,50 +24,73 @@ skills (PR-body shape, code-review pass, stacked-PR ops) get loaded at
 session start, decay out of attention over long sessions, and the agent
 falls back on training priors that don't match project convention.
 
+Both read Skill invocations from the transcript through
+`lib/skill-hits.sh`: one pass that lists every invoked skill name, with an
+optional recency window.
+
 **Nudge** (early, soft):
-Fires on every `UserPromptSubmit`. Pattern-matches the prompt against
-trigger phrases and checks whether the matching skill has been invoked in
-the last `$SKILL_NUDGE_RECENCY` transcript entries (default 50). If
-absent, writes a `<system-reminder>` block to stdout — Claude Code
-appends UserPromptSubmit stdout to the user's prompt as additional
-context. No block, no extra turn.
+Fires on every `UserPromptSubmit`. If the prompt is a request for a gated
+task and the matching skill has not been invoked in the last
+`$SKILL_NUDGE_RECENCY` transcript entries (default 50), writes a
+`<system-reminder>` block to stdout — Claude Code appends UserPromptSubmit
+stdout to the user's prompt as additional context. No block, no extra turn.
 
 **Gate** (late, hard):
-Fires on `PreToolUse` for `Bash`. If the command matches a gated pattern
-and the required skill has not been invoked anywhere in the session,
-exits `2` with a stderr message instructing what to invoke.
+Fires on `PreToolUse` for `Bash`. If the command runs a gated command and
+the required skill has not been invoked anywhere in the session (including
+this session's subagent transcripts), exits `2` with a stderr message
+instructing what to invoke.
 
-Current gates / nudges:
+#### Trigger rule
 
-| Trigger surface                                                                                  | Required skill                            |
-|--------------------------------------------------------------------------------------------------|-------------------------------------------|
-| `gh pr create` / `gh pr edit`                                                                    | `agentic-development:pr-body-protocol`    |
-| `gh api -X PATCH .../pulls/<N>`                                                                  | `agentic-development:pr-body-protocol`    |
-| `git-spice {branch,stack} submit`, `git spice ...`, `gs {ss,bs,branch submit,stack submit}`      | `agentic-development:pr-body-protocol`    |
-| `gh stack submit` / `gs submit`                                                                  | `agentic-development:pr-body-protocol`    |
-| Prompt mentions push/submit/create + PR/stack/branch                                             | `agentic-development:pr-body-protocol`    |
-| `gh pr review` / `gh api .../pulls/<N>/reviews`                                                  | `agentic-development:reviewing-code`      |
-| Prompt asks for a review: imperative review/audit + PR/diff/branch/changes, or "do a review"    | `agentic-development:reviewing-code`      |
-| Prompt mentions restack / git-spice / `gh stack` / `gs ss`                                       | `agentic-development:stacked-prs`         |
+- **Nudge: requests, not mentions.** A trigger fires only when its verb
+  opens a sentence — at the start of the prompt or a line, or after
+  `.` `!` `?` `;` `:` — optionally after a lead-in such as "please",
+  "can you" or "could you". "Review this PR" and "Can you review my
+  changes?" fire; "What calls pr-review-complex?", "what's our tech
+  stack?" and "what did PR 12 update?" do not. The shared lead-in is
+  `REQUEST`; each skill has one `check` holding its verbs and objects.
+- **Nudge: harness messages are skipped.** A prompt that opens with a
+  harness envelope (`<task-notification>`, `Another Claude session sent a
+  message:`, `<agent-message`, `<teammate-message`, `<system-reminder>`,
+  local-command output) exits before any trigger runs. Only the opening
+  counts, so user text that quotes a tag mid-prompt is still read.
+- **Gate: commands, not text.** The command is reduced to what executes:
+  heredoc bodies are dropped and each quoted string collapses to one opaque
+  word. Every pattern is then anchored at a command position — the start,
+  or after `;`, `&`, `|`, `&&`, `||`, `$(`, `(` or a newline. So
+  `git commit -m "... gh pr edit ..."`, `grep 'gh pr review' …` and a
+  heredoc that mentions `gh pr edit` pass; `cd x && gh pr create …` is
+  gated. A command position carrying `--help`, `-h` or `--dry-run` is
+  inspecting a tool, not authoring a PR, and passes.
 
-The gate exempts help and dry-run invocations: a command carrying
-`--help`, `-h`, or `--dry-run` (and no `--title` / `--body`) is inspecting
-a tool, not authoring a PR, so it passes through. Without that exemption
-`git-spice branch submit --help` blocks — observed live.
+| Gated surface                                                                                     | Required skill                            |
+|---------------------------------------------------------------------------------------------------|-------------------------------------------|
+| `gh pr create` / `gh pr edit`; `gh api` PATCH on `pulls/<N>` or POST on `pulls`                   | `agentic-development:pr-body-protocol`    |
+| `git-spice {branch,stack} submit`, `git spice …`, `gs {ss,bs}`, `gh stack submit` / `gs submit`   | `agentic-development:pr-body-protocol`    |
+| Request to push / submit / open / create / update a PR                                            | `agentic-development:pr-body-protocol`    |
+| `gh pr review` / `gh api .../pulls/<N>/reviews`                                                   | `agentic-development:reviewing-code`      |
+| Request to review / audit code, a PR, a diff or changes, or to "do a review"                      | `agentic-development:reviewing-code`      |
+| Request to restack / stack branches, or to use git-spice / GitHub Stacks                          | `agentic-development:stacked-prs`         |
 
 To add a rule:
 
 1. **Gate** — append an `elif … REQUIRED_SKILL=… GATE_REASON=…` arm in
-   `pretooluse-skill-gate.sh`. Keep matches anchored on `\b` so unrelated
-   commands (`gh issue edit`, `gh api .../issues/N`) pass through.
-2. **Nudge** — append a `check '<regex>' '<skill>' '<label>'` call in
-   `userpromptsubmit-skill-nudge.sh`.
+   `pretooluse-skill-gate.sh`, anchored at `^` (each segment it tests
+   already starts at a command position).
+2. **Nudge** — add the verb or object to that skill's `check` alternation in
+   `userpromptsubmit-skill-nudge.sh`, or add one `check` for a new skill.
+3. **Test** — add a fire and a silent case to `tests/run.sh`.
 
 The nudge tolerates over-triggering (cost = one extra system reminder);
-the gate does not (cost = a blocked tool call), so nudge patterns can be
-looser than gate patterns. Looser still means a request, not a mention:
-"What calls pr-review-complex? Is that part of reviewing-code?" names
-review-shaped things without asking for a review, and must not fire.
+the gate does not (cost = a blocked tool call).
+
+#### Tests
+
+`bash hooks/tests/run.sh` feeds fixture events to both hooks and asserts
+each outcome — nudge fire / silent, gate block / allow — against temporary
+transcripts. It needs only bash and jq, prints one `PASS` / `FAIL` line per
+case, and exits non-zero when any case fails.
 
 ### Comment check (`posttooluse-comment-check.sh`)
 
@@ -92,14 +115,6 @@ third line answers the first. Prose files (`.md`, `.txt`) are skipped
 entirely — a Markdown document is all comment. Language markers come from
 the file extension; an unknown extension exits 0.
 
-When nothing is flagged the hook is silent. The reminder that used to sit
-here fired on any edit that added a line to a recognised source file — it
-never checked whether a comment was among them — spending exit 2, the
-agent's only channel, on edits with nothing wrong, and slurping the whole
-JSONL transcript per edit to date the last skill invocation (10 ms at 1 MB,
-330 ms at 52 MB, against this hook's 5 s timeout). Nothing else surfaces
-the skill: the nudge has no arm for it.
-
 The scope is the comment text and nothing else. Adjacent code is read as
 the reference the comment is measured against and is never judged; the
 remedy the agent is handed is always "rewrite or delete the comment".
@@ -119,21 +134,10 @@ Hooks no-op (exit 0) when:
 - `jq` is unavailable on the host.
 - `transcript_path` is missing from the event or the file does not exist.
 - The extracted last assistant message is empty (`Stop` hooks).
-- (`pretooluse-skill-gate`) the command doesn't match any gated pattern.
-- (`userpromptsubmit-skill-nudge`) the prompt doesn't match any trigger
-  OR the matched skill was already invoked within the recency window.
+- (`pretooluse-skill-gate`) the command runs no gated command.
+- (`userpromptsubmit-skill-nudge`) the prompt is a harness message, makes
+  no matching request, or the matched skill was already invoked within the
+  recency window.
 - (`posttooluse-comment-check`) the edit added no lines, the file extension
   has no known comment syntax, the added lines carry no comment, every
   comment among them passes, or `$COMMENT_CHECK_DISABLE` is set.
-
-## Dropped hooks
-
-| Hook                              | Reason                                                                 |
-|-----------------------------------|------------------------------------------------------------------------|
-| `task-completed-retro.sh`         | Superseded by a `/retro` command, itself removed in v2.0.0.            |
-| `task-created-criteria-mapping.sh`| `TaskCreate` is not a Claude Code event; CC `Agent` tool payload lacks `criterion`/`link` fields the check expects. |
-| `teammate-idle-summary.sh`        | `TeammateIdle` is Claude Agent Teams-only. No Claude Code equivalent.  |
-| `task-completed-checklist.sh`     | Removed v2.0.0 with the role harness: its `$PROJECT_PRECOMMIT_CHECKLIST` was loaded only by the harness bindings. |
-
-See `~/.claude/specs/2026-05-18-hooks-respec-design.md` (out-of-tree) for the
-full rationale, or the commit that landed this change.

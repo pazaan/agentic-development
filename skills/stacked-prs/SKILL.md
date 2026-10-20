@@ -172,12 +172,9 @@ Written for git-spice; under `gh stack` the equivalent steps are
   tool depending on whose alias is loaded.
 - Assume the command syntax you remember is correct. If you're not
   certain, fetch the tool's docs before running it.
-- Trust a `PROJECT_PR_PUSH_CMD` override without verifying the command
-  exists. User wrappers (e.g. `gss`) live in interactive shell config and
-  won't resolve in a non-interactive harness.
-- Treat a configured push command as evidence of which stack tool the repo
-  uses. It is a stale cache of a decision Step 0 re-derives correctly every
-  time.
+- Run a shell alias or function such as `gss`. Aliases live in interactive
+  shell config and are invisible to a non-interactive shell, so use
+  `git-spice stack submit`.
 
 **Always:**
 - Prefer the canonical long form (`git-spice branch submit`,

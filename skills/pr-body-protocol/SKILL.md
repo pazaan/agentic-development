@@ -57,7 +57,7 @@ the stack.
 - `## What changed` (3-4 bullets) → `## Test plan` (2-3 lines) → `## Notes`
   (only if material).
 - Cap ~150 visible words absolute.
-- No links to agent state or out-of-repo specs and plans.
+- No links to out-of-repo specs, plans or agent notes.
 - No restating GitHub-UI / stack-tool / base-branch metadata. No ITER-####
   markers, plan-section refs, or tracker links.
 

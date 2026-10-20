@@ -87,7 +87,7 @@ finding, in order:
 3. The fix. On a PR: a ` ```suggestion ` block with the exact replacement
    for the anchor lines (verify anchors — one bad anchor 422s the whole
    review). Otherwise one line of remediation. Out-of-hunk lines take no
-   block (see Posting).
+   block (see `references/posting.md`).
 
 Recommend one fix; a choice is unfinished, and whoever applies it invents a
 rationale for their pick. If your argument favours a branch, name it and check
@@ -117,50 +117,26 @@ Examples: `references/examples.md`.
 
 ## Posting to GitHub
 
-- Submit one review (`POST /repos/{owner}/{repo}/pulls/{n}/reviews` with a
-  `comments` array), not N comments.
-- A comment lands only inside a diff hunk. Compute ranges first
-  (`git diff -U3 BASE..HEAD -- <path> | grep '^@@'`). An out-of-hunk finding
-  becomes a plain comment on the nearest in-hunk line naming the real lines.
-  Long-lived modified files bite; new files never do.
-- The body carries only what no inline comment can: manual steps no
-  suggestion covers, a caveat no anchor owns. Otherwise empty. Comments that
-  must land together say so themselves.
-- GitHub renders no numbering; refer to a comment by file and symbol. Replace
-  a submitted body with `PUT .../pulls/{n}/reviews/{review_id}`.
+On a PR, read `references/posting.md` before submitting: one review, hunk
+ranges, and what the body may carry.
 
 ## Red Flags — stop and re-verify
 
 - Citing a flag, method or line you have not read to the end.
-- Asserting a failure path a scratch script could run, without running it.
-- "The library isn't installed" — install it, then decide.
 - Verifying hardest on findings you expect to reject; the relayed ones reach
   the author.
-- Treating a read citation as verification of the consequence.
 - Skipping verification because the PR is small or the last finding checked out.
 - Illustrating a test gap with a mutation nobody would make.
 - A concession in a finding ("low impact") with the finding kept anyway.
-- Citing any file but the anchor.
 - Calling a docstring a lie when it describes encapsulation.
 - Two findings referencing each other — does A stand alone?
 - "Could in principle" / "a future maintainer might".
-- A suggestion block not read against the lines it replaces.
 - A fix whose recovery path calls the thing that just failed.
-- Asking for a test on an untraced path.
-- A nit needing a new type, abstraction or signature change.
 - Leaving the rest of the fix to the author; they implement what you wrote.
-- Grepping only the symbol for companions.
-- Shortening a comment without re-reading it against the file.
-- A bare-filename anchor, or a line no hunk covers.
-- Two comments on one file not read as one patch.
-- "Either X or Y".
 - A body describing your review instead of their code.
-- A finding with no observation only reading the code could produce.
-- Padding to look thorough.
-- A first sentence that is mechanism, symptom never arriving.
 
 ## Evidence
 
-`references/baselines.md` holds six real runs and the error each rule was
-written to stop (Baselines 5 and 6 back steps 5 and 6). Read it when a rule
-looks arbitrary or you are weighing a finding you cannot quite justify.
+`references/baselines.md` holds real runs and the error each rule was
+written to stop, each naming the step it backs. Read it when a rule looks
+arbitrary or you are weighing a finding you cannot quite justify.
