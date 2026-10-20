@@ -1,6 +1,6 @@
 ---
 name: review-rehearsal
-description: Use when explicitly asked to rehearse, dry-run, or pressure-test a code review before it is posted — a junior-persona agent applies the review to a throwaway branch, a senior-persona agent reviews the result, and the output is a corrected review. The artifact under test is the REVIEW, not the code. Request-only; it costs two subagents and a worktree.
+description: Use only when explicitly asked to rehearse, dry-run or pressure-test a written code review before posting it; costs two subagents and a worktree.
 ---
 
 # Review rehearsal

@@ -1,6 +1,6 @@
 ---
 name: stacked-prs
-description: Use before any git operation that rewrites history or changes branch parentage (`git rebase`, `git push --force`, `git commit --amend`, `git merge main`), and whenever the work involves stacked pull requests. Triggers on "stack", "restack", "stacked PR", "git-spice", "gh stack", `gs`. Resolves which stack tool the repo actually uses — git-spice, GitHub Stacks, or neither — and routes to that tool's equivalent commands.
+description: Use before rebase, force-push, amend or merging main, and for any stacked-PR work (git-spice, gh stack, gs); routes the operation to the stack tool the repo uses.
 ---
 
 # Stacked PRs
@@ -186,7 +186,7 @@ Written for git-spice; under `gh stack` the equivalent steps are
 - After any restack, confirm the stack shape before pushing —
   `git-spice log short` or `gh stack view`.
 - After `git-spice commit amend`, **verify the tree actually changed**
-  before claiming success — Coder agents have been observed amending
+  before claiming success — agents have been observed amending
   with nothing staged (SHA rebake, identical tree):
 
     ```bash

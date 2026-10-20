@@ -14,7 +14,6 @@ comment check reads only the event.
 | `userpromptsubmit-skill-nudge.sh`   | `UserPromptSubmit`  | `prompt`, `transcript_path`          | Soft nudge — injects skill names when the user's prompt looks skill-shaped and the skill is stale. |
 | `pretooluse-skill-gate.sh`          | `PreToolUse`        | `tool_name`, `tool_input.command`    | Hard gate — blocks PR-write / review-write commands until the required skill has been invoked. |
 | `posttooluse-comment-check.sh`      | `PostToolUse`       | `tool_input.{file_path,old_string,new_string,content}` | Judges the comment lines an edit added; silent unless it has a finding. |
-| `task-completed-checklist.sh`       | `Stop`              | `$PROJECT_PRECOMMIT_CHECKLIST`       | No-op when env unset or file missing.  |
 | `task-completed-caveman-bleed.sh`   | `Stop`              | `$CAVEMAN_BLEED_THRESHOLD` (def. 40) | Heuristic; tune per project.           |
 
 ### Skill-recall pair (`userpromptsubmit-skill-nudge` + `pretooluse-skill-gate`)
@@ -48,9 +47,8 @@ Current gates / nudges:
 | `gh stack submit` / `gs submit`                                                                  | `agentic-development:pr-body-protocol`    |
 | Prompt mentions push/submit/create + PR/stack/branch                                             | `agentic-development:pr-body-protocol`    |
 | `gh pr review` / `gh api .../pulls/<N>/reviews`                                                  | `agentic-development:reviewing-code`      |
-| Prompt mentions review/audit + PR/diff/code                                                      | `agentic-development:reviewing-code`      |
+| Prompt asks for a review: imperative review/audit + PR/diff/branch/changes, or "do a review"    | `agentic-development:reviewing-code`      |
 | Prompt mentions restack / git-spice / `gh stack` / `gs ss`                                       | `agentic-development:stacked-prs`         |
-| Prompt mentions acceptance criteria / `AC-<n>`                                                   | `agentic-development:ticket-as-contract`  |
 
 The gate exempts help and dry-run invocations: a command carrying
 `--help`, `-h`, or `--dry-run` (and no `--title` / `--body`) is inspecting
@@ -67,7 +65,9 @@ To add a rule:
 
 The nudge tolerates over-triggering (cost = one extra system reminder);
 the gate does not (cost = a blocked tool call), so nudge patterns can be
-looser than gate patterns.
+looser than gate patterns. Looser still means a request, not a mention:
+"What calls pr-review-complex? Is that part of reviewing-code?" names
+review-shaped things without asking for a review, and must not fire.
 
 ### Comment check (`posttooluse-comment-check.sh`)
 
@@ -98,8 +98,7 @@ never checked whether a comment was among them — spending exit 2, the
 agent's only channel, on edits with nothing wrong, and slurping the whole
 JSONL transcript per edit to date the last skill invocation (10 ms at 1 MB,
 330 ms at 52 MB, against this hook's 5 s timeout). Nothing else surfaces
-the skill: the nudge has no arm for it, and a spawned role cannot invoke
-skills at all (`SKILLS.md`), so roles carry it from `ROLES.md`.
+the skill: the nudge has no arm for it.
 
 The scope is the comment text and nothing else. Adjacent code is read as
 the reference the comment is measured against and is never judged; the
@@ -120,7 +119,6 @@ Hooks no-op (exit 0) when:
 - `jq` is unavailable on the host.
 - `transcript_path` is missing from the event or the file does not exist.
 - The extracted last assistant message is empty (`Stop` hooks).
-- The configured env var or referenced checklist file is missing.
 - (`pretooluse-skill-gate`) the command doesn't match any gated pattern.
 - (`userpromptsubmit-skill-nudge`) the prompt doesn't match any trigger
   OR the matched skill was already invoked within the recency window.
@@ -128,13 +126,14 @@ Hooks no-op (exit 0) when:
   has no known comment syntax, the added lines carry no comment, every
   comment among them passes, or `$COMMENT_CHECK_DISABLE` is set.
 
-## Dropped hooks (was v0.3.1, removed v0.3.2)
+## Dropped hooks
 
 | Hook                              | Reason                                                                 |
 |-----------------------------------|------------------------------------------------------------------------|
-| `task-completed-retro.sh`         | Superseded by `/retro` slash command (`agentic-development:retro`).    |
+| `task-completed-retro.sh`         | Superseded by a `/retro` command, itself removed in v2.0.0.            |
 | `task-created-criteria-mapping.sh`| `TaskCreate` is not a Claude Code event; CC `Agent` tool payload lacks `criterion`/`link` fields the check expects. |
 | `teammate-idle-summary.sh`        | `TeammateIdle` is Claude Agent Teams-only. No Claude Code equivalent.  |
+| `task-completed-checklist.sh`     | Removed v2.0.0 with the role harness: its `$PROJECT_PRECOMMIT_CHECKLIST` was loaded only by the harness bindings. |
 
 See `~/.claude/specs/2026-05-18-hooks-respec-design.md` (out-of-tree) for the
 full rationale, or the commit that landed this change.

@@ -1,6 +1,6 @@
 ---
 name: no-bullshit-comments
-description: Use when writing or editing a code comment or docstring, and when judging one in a diff under review. Symptoms include a comment that narrates the lines below it, cites an acceptance-criterion number or a plan or spec path, says "in this PR" or "on this branch", argues with an imagined critic about its own necessity, or hardcodes a count of things that can grow.
+description: Use when writing, editing or reviewing a code comment or docstring, especially one that narrates code, cites a ticket, plan or PR, defends itself, or hardcodes a count.
 ---
 
 # No-bullshit comments

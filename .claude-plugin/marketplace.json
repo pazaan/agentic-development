@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentic-development",
-  "description": "Personal Claude Code extensions — skills, commands, agents, and hooks.",
+  "description": "Personal Claude Code extensions — skills and hooks.",
   "owner": {
     "name": "Lennart Goedhart",
     "url": "https://github.com/pazaan"
@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "agentic-development",
-      "description": "Personal Claude Code extensions — skills, commands, agents, and hooks.",
+      "description": "Personal Claude Code extensions — skills and hooks.",
       "source": "./",
       "category": "productivity"
     }

@@ -75,11 +75,14 @@ check '\bprs?\b.*\b(body|description|title|message)\b' \
       'agentic-development:pr-body-protocol' \
       'PR body / title'
 
-# reviewing-code
-check '\b(review|audit)\b.*\b(this[[:space:]]+)?(prs?|diffs?|code|changes?)\b' \
+# reviewing-code — a review *request* only: an imperative review verb that
+# opens a sentence and takes a PR / diff / branch as its object, or "do a
+# review". A mention of a review-shaped name ("pr-review-complex",
+# "reviewing-code") inside a question is not a request.
+check '(^|[.!?][[:space:]]+)((please|ok|okay|now|then),?[[:space:]]+)?((can|could|would|will)[[:space:]]+you[[:space:]]+)?(please[[:space:]]+)?((carefully|thoroughly|quickly)[[:space:]]+)?(re-?)?(review|audit)[[:space:]]+(this|that|the|my|our|these|those|prs?|pull|#?[0-9]+|diffs?|branch(es)?|changes?|code|commits?|work)\b' \
       'agentic-development:reviewing-code' \
       'reviewing code / a PR'
-check '\bcode[[:space:]]+review\b' \
+check '\b(do|run|give|start|perform)[[:space:]]+(me[[:space:]]+)?an?[[:space:]]+((code|quick|full|thorough|careful)[[:space:]]+)?review\b' \
       'agentic-development:reviewing-code' \
       'reviewing code / a PR'
 
@@ -101,14 +104,6 @@ check '\bgithub[[:space:]]+stacks?\b' \
 check '\bgs[[:space:]]+(ss|bs|stack|branch)\b' \
       'agentic-development:stacked-prs' \
       'stacked-PR ops'
-
-# ticket-as-contract
-check '\bacceptance[[:space:]]+criteria\b' \
-      'agentic-development:ticket-as-contract' \
-      'treating a ticket as the contract'
-check '\bAC-?[0-9]+\b' \
-      'agentic-development:ticket-as-contract' \
-      'treating a ticket as the contract'
 
 # --- Recency check + emit ------------------------------------------------
 

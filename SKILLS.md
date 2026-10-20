@@ -1,48 +1,28 @@
 # Skills Catalog
 
-Every skill the canonical role set references, mapped to its trigger, the
-role-section it replaces, and whether drift is **upstream-controlled** (skill
-lives in another plugin we don't own) or **user-controlled** (skill lives in
-this plugin).
+Every skill this plugin ships or composes, mapped to its trigger and
+whether drift is **upstream-controlled** (skill lives in another plugin we
+don't own) or **user-controlled** (skill lives in this plugin).
 
-| Skill                                          | Trigger                                    | Replaces role-section                       | Drift            | Pinned SHA  |
-|------------------------------------------------|--------------------------------------------|---------------------------------------------|------------------|-------------|
-| `agentic-development:caveman-micro`            | terse-response request                     | Lead caveman mode block                     | user-controlled  | (this repo) |
-| `agentic-development:reviewing-code`           | review request                             | Reviewer five-pass body                     | user-controlled  | (this repo) |
-| `agentic-development:review-rehearsal`         | explicit request to rehearse a review before posting | (none — new capability)           | user-controlled  | (this repo) |
-| `agentic-development:stacked-prs`              | raw git rebase / push --force / amend / merge; any stack operation | Coder git-spice safety block   | user-controlled  | (this repo) |
-| `agentic-development:tester-browser-sweep`     | Tester loop                                | Tester axe/console/functional inline body   | user-controlled  | (this repo) |
-| `agentic-development:pre-commit-grep`          | Coder pre-commit                           | Coder existing-pattern + third-party verify | user-controlled  | (this repo) |
-| `agentic-development:no-bullshit-comments`     | comment written or edited                   | (none — new capability)                     | user-controlled  | (this repo) |
-| `agentic-development:ticket-as-contract`       | Lead plan or Reviewer adjudication         | Lead Ticket Criteria Mapping + Build Order  | user-controlled  | (this repo) |
-| `agentic-development:team-handoff`             | Lead first-action / spawn / message peers / plan storage | Lead spawn + binding load + plan storage | user-controlled  | (this repo) |
-| `agentic-development:pr-body-protocol`         | first push / PR-body curation / commit body audit | Lead PR body + Coder commit body            | user-controlled  | (this repo) |
-| `gangsta:audit-review`                         | reviewer dispatch inside reviewing-code    | reviewing-code dispatch step                | upstream         | TODO pin    |
-| `gangsta:receiving-orders`                     | reviewer / tester findings inbound         | Lead adjudication block                     | upstream         | TODO pin    |
-| `gangsta:drill-tdd`                            | Coder writes implementation                | Coder TDD block                             | upstream         | TODO pin    |
-| `gangsta:sweep-verification`                   | Coder claims done                          | Coder verification block                    | upstream         | TODO pin    |
-| `simplify`                                     | Coder finishes change                      | Coder reuse / simplify block                | upstream         | TODO pin    |
+| Skill                                          | Trigger                                                            | Drift            | Pinned SHA  |
+|------------------------------------------------|--------------------------------------------------------------------|------------------|-------------|
+| `agentic-development:reviewing-code`           | review request                                                     | user-controlled  | (this repo) |
+| `agentic-development:review-rehearsal`         | explicit request to rehearse a review before posting               | user-controlled  | (this repo) |
+| `agentic-development:stacked-prs`              | raw git rebase / push --force / amend / merge; any stack operation | user-controlled  | (this repo) |
+| `agentic-development:no-bullshit-comments`     | comment written, edited or reviewed                                | user-controlled  | (this repo) |
+| `agentic-development:pr-body-protocol`         | PR body or commit body written or edited                           | user-controlled  | (this repo) |
+| `gangsta:audit-review`                         | reviewer dispatch inside reviewing-code                            | upstream         | TODO pin    |
+| `gangsta:receiving-orders`                     | findings verification inside reviewing-code                        | upstream         | TODO pin    |
 
 ## Drift policy
 
 - **user-controlled** drift: edit in this repo, version-bump plugin.
-- **upstream-controlled** drift: `skill-drift-check` fetches upstream
-  SHA on a schedule, reports the diff, user decides when to re-pin.
+- **upstream-controlled** drift: compare the upstream skill against the
+  pinned SHA by hand, then decide whether to re-pin.
 
 ## Plugin dependencies
 
-Skills marked `upstream` ship from other plugins. Declared in
+Skills marked `upstream` ship from other plugins, declared in
 `.claude-plugin/plugin.json` `dependencies`. Only plugins this one
-actually consumes belong there — terse-response mode is served in-repo by
-`caveman-micro`, so the `caveman` plugin is not a dependency, and the
-`task-completed-caveman-bleed.sh` hook detects bleed without it. Subagent `skills:` and
-`mcpServers:` frontmatter is ignored for spawned teammates — skills must
-be installed at user or project level. MCP servers go in the user's
-`settings.json`. Spawned roles also lack the `Skill` tool, so they
-practise a skill's content rather than invoking it; briefs should ask for
-"applied + evidence", not "invoke skill X".
-
-## TODO
-
-- Replace `TODO pin` placeholders in the skills table with concrete
-  upstream SHAs once `skill-drift-check` baselines them.
+actually consumes belong there; the `task-completed-caveman-bleed.sh` hook
+detects bleed without the `caveman` plugin, so it is not a dependency.

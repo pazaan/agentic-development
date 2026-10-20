@@ -1,7 +1,7 @@
 {
   "name": "agentic-development",
   "version": "1.10.0",
-  "description": "Personal Claude Code extensions \u2014 skills, commands, agents, and hooks.",
+  "description": "Personal Claude Code extensions — skills and hooks.",
   "author": {
     "name": "Lennart Goedhart",
     "email": "lennart@omnibase.com.au"
@@ -49,12 +49,6 @@
     "Stop": [
       {
         "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/task-completed-checklist.sh\"",
-            "timeout": 5,
-            "statusMessage": "Checking pre-commit checklist..."
-          },
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/task-completed-caveman-bleed.sh\"",
